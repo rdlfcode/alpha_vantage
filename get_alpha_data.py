@@ -1,19 +1,22 @@
+from dotenv import load_dotenv
 import os
 import requests
 import pandas as pd
+import pyarrow
 from io import StringIO
 
 # Replace with your actual Alpha Vantage API key
-API_KEY = "YOUR_API_KEY"
+load_dotenv()
+API_KEY = os.environ["ALPHA_VANTAGE_API_KEY"]
 BASE_URL = "https://www.alphavantage.co/query"
 
 # Read stock symbols from stocks.txt
 try:
-    with open("c:/Users/roman/Projects/alpha_vantage/stocks.txt", "r") as f:
+    with open("stocks.txt", "r") as f:
         STOCK_SYMBOLS = [line.strip() for line in f if line.strip()]
 except FileNotFoundError:
     print("Error: stocks.txt not found.")
-    STOCK_SYMBOLS = []
+    STOCK_SYMBOLS = ["GOOG"]
 
 # Define some common crypto symbols and forex pairs
 CRYPTO_SYMBOLS = ["BTC", "ETH", "DOGE"]
@@ -94,7 +97,7 @@ crypto_data = {}
 # Summary table for stocks
 stock_summary_table = pd.DataFrame(index=STOCK_SYMBOLS)
 
-def fetch_data(endpoint_name, params):
+def fetch_data(endpoint_name, params) -> dict | str | None:
     """Fetches data from a single Alpha Vantage endpoint."""
     full_params = {"function": endpoint_name, "apikey": API_KEY, **params}
     print(f"Fetching data for {endpoint_name} with params: {full_params}")
@@ -105,7 +108,12 @@ def fetch_data(endpoint_name, params):
         if 'Error Message' in response.text or 'Note' in response.text:
              print(f"API returned an error or note for {endpoint_name}: {response.text}")
              return None
-        return pd.read_csv(StringIO(response.text))
+        
+        if params.get("datatype", "json") == "json":
+            return response.json()
+        else:
+            return response.text
+        
     except requests.exceptions.RequestException as e:
         print(f"Error fetching data for {endpoint_name}: {e}")
         return None
@@ -116,109 +124,29 @@ def fetch_data(endpoint_name, params):
         print(f"An unexpected error occurred for {endpoint_name}: {e}")
         return None
 
-# Iterate through endpoints and fetch data
-for endpoint_name, params_def in ENDPOINTS.items():
-    if "symbol" in params_def:
-        for symbol in params_def["symbol"]:
-            current_params = {k: v for k, v in params_def.items() if k != "symbol"}
-            current_params["symbol"] = symbol
-            df = fetch_data(endpoint_name, current_params)
-            if df is not None:
-                if "TIME_SERIES" in endpoint_name:
-                    interval = endpoint_name.split("_")[-1].lower() # daily, weekly, monthly
-                    if interval in time_series_data:
-                         time_series_data[interval][symbol] = df
-                    else: # Handle adjusted time series
-                         time_series_data[interval + "_adjusted"][symbol] = df
-                elif endpoint_name in ["GLOBAL_QUOTE", "OVERVIEW", "ETF_PROFILE", "DIVIDENDS", "SPLITS", "INCOME_STATEMENT", "BALANCE_SHEET", "CASH_FLOW", "EARNINGS", "INSIDER_TRANSACTIONS"]:
-                    fundamental_data[f"{endpoint_name}_{symbol}"] = df
-                    # Add to stock summary table
-                    if endpoint_name == "GLOBAL_QUOTE" and not df.empty:
-                         # Assuming the CSV has columns like 'symbol', 'latest_trading_day', 'price', 'volume'
-                         if 'symbol' in df.columns and 'price' in df.columns:
-                             stock_summary_table.loc[symbol, 'Latest Price'] = df.loc[0, 'price']
-                             stock_summary_table.loc[symbol, 'Latest Trading Day'] = df.loc[0, 'latest_trading_day']
-                         elif 'Symbol' in df.columns and 'Price' in df.columns: # Handle potential variations in column names
-                             stock_summary_table.loc[symbol, 'Latest Price'] = df.loc[0, 'Price']
-                             stock_summary_table.loc[symbol, 'Latest Trading Day'] = df.loc[0, 'Latest Trading Day']
+def get_av_df(endpoint_name, params) -> pd.DataFrame:
+    """Fetches data from a single Alpha Vantage endpoint."""
+    data = fetch_data(endpoint_name, params)
 
-                    elif endpoint_name == "OVERVIEW" and not df.empty:
-                         # Assuming the CSV has relevant columns like 'MarketCapitalization', 'PERatio'
-                         if 'MarketCapitalization' in df.columns:
-                             stock_summary_table.loc[symbol, 'Market Cap'] = df.loc[0, 'MarketCapitalization']
-                         if 'PERatio' in df.columns:
-                             stock_summary_table.loc[symbol, 'PE Ratio'] = df.loc[0, 'PERatio']
+    if isinstance(data, str):
+        
+    
 
-                elif endpoint_name == "SYMBOL_SEARCH":
-                     utility_data[f"{endpoint_name}_{symbol}"] = df # Store search results per keyword
-                elif endpoint_name == "HISTORICAL_OPTIONS":
-                     utility_data[f"{endpoint_name}_{symbol}"] = df # Store options data per symbol
+# # Print summaries or save dataframes
+# print("\n--- Data Fetching Complete ---")
 
-    elif "pairs" in params_def:
-         for from_c, to_c in params_def["pairs"]:
-             current_params = {k: v for k, v in params_def.items() if k != "pairs"}
-             current_params["from_currency"] = from_c
-             current_params["to_currency"] = to_c
-             df = fetch_data(endpoint_name, current_params)
-             if df is not None:
-                 if "FX_" in endpoint_name:
-                     interval = endpoint_name.split("_")[-1].lower()
-                     if interval in forex_data:
-                         forex_data[interval][f"{from_c}_{to_c}"] = df
-                     else:
-                         forex_data[interval] = {f"{from_c}_{to_c}": df}
-                 elif endpoint_name == "CURRENCY_EXCHANGE_RATE":
-                      forex_data[f"{endpoint_name}_{from_c}_{to_c}"] = df
+# print("\n--- Stock Summary Table ---")
+# print(stock_summary_table)
 
-    elif "symbols" in params_def and "markets" in params_def:
-         for symbol in params_def["symbols"]:
-             for market in params_def["markets"]:
-                 current_params = {k: v for k, v in params_def.items() if k not in ["symbols", "markets"]}
-                 current_params["symbol"] = symbol
-                 current_params["market"] = market
-                 df = fetch_data(endpoint_name, current_params)
-                 if df is not None:
-                     if "DIGITAL_CURRENCY_" in endpoint_name:
-                         interval = endpoint_name.split("_")[-1].lower()
-                         if interval in crypto_data:
-                             crypto_data[interval][f"{symbol}_{market}"] = df
-                         else:
-                             crypto_data[interval] = {f"{symbol}_{market}": df}
+# print("\n--- Time Series Data (Daily) ---")
+# for symbol, df in time_series_data["daily"].items():
+#     print(f"\n{symbol} Daily Data:")
+#     print(df.head())
 
-    elif "maturity" in params_def:
-         for maturity in params_def["maturity"]:
-             current_params = {k: v for k, v in params_def.items() if k != "maturity"}
-             current_params["maturity"] = maturity
-             df = fetch_data(endpoint_name, current_params)
-             if df is not None:
-                 economic_indicator_data[f"{endpoint_name}_{maturity}"] = df
-
-    elif endpoint_name in ["WTI", "BRENT", "NATURAL_GAS", "COPPER", "ALUMINUM", "WHEAT", "CORN", "COTTON", "SUGAR", "COFFEE", "ALL_COMMODITIES"]:
-         df = fetch_data(endpoint_name, params_def)
-         if df is not None:
-             commodity_data[endpoint_name] = df
-
-    elif endpoint_name in ["REAL_GDP", "REAL_GDP_PER_CAPITA", "FEDERAL_FUNDS_RATE", "CPI", "INFLATION", "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL"]:
-         df = fetch_data(endpoint_name, params_def)
-         if df is not None:
-             economic_indicator_data[endpoint_name] = df
-
-    elif endpoint_name in ["MARKET_STATUS", "TOP_GAINERS_LOSERS", "LISTING_STATUS", "EARNINGS_CALENDAR", "IPO_CALENDAR", "NEWS_SENTIMENT"]:
-         df = fetch_data(endpoint_name, params_def)
-         if df is not None:
-             utility_data[endpoint_name] = df
-
-# Print summaries or save dataframes
-print("\n--- Data Fetching Complete ---")
-
-print("\n--- Stock Summary Table ---")
-print(stock_summary_table)
-
-print("\n--- Time Series Data (Daily) ---")
-for symbol, df in time_series_data["daily"].items():
-    print(f"\n{symbol} Daily Data:")
-    print(df.head())
-
+df = fetch_data("INCOME_STATEMENT", {"symbol": "GOOG"})  #, "outputsize": "full", "datatype": "csv"})
+print(df)
+if isinstance(df, pd.DataFrame):
+    df.to_parquet("GOOG_INCOME_STATEMENT.parquet")
 # You can similarly print or process other data structures
 # print("\n--- Fundamental Data ---")
 # for name, df in fundamental_data.items():
