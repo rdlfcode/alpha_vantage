@@ -1,3 +1,5 @@
+BASE_URL = "https://www.alphavantage.co/query"
+
 alpha_vantage_schema = {
 
     # Core Stock APIs #########################################################
@@ -302,10 +304,8 @@ alpha_vantage_schema = {
     "NONFARM_PAYROLL": {
         "datatype": ["json", "csv"]
     }
-
     # Ignoring Technical Indicators (they will be computed locally)
 }
-
 
 premium_endpoints = [
     "TIME_SERIES_DAILY_ADJUSTED",
