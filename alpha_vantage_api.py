@@ -1,4 +1,8 @@
 BASE_URL = "https://www.alphavantage.co/query"
+RATE_LIMITS = {
+    "RPM": 75,
+    "RPD": 25
+}
 
 alpha_vantage_schema = {
 
@@ -304,7 +308,6 @@ alpha_vantage_schema = {
     "NONFARM_PAYROLL": {
         "datatype": ["json", "csv"]
     }
-    # Ignoring Technical Indicators (they will be computed locally)
 }
 
 premium_endpoints = [
