@@ -1,5 +1,6 @@
 settings = {
     "data_dir": "data",
+    "db_path": "data/alpha_vantage.db",
     "AlphaVantageRPM": 75,
     "AlphaVantageRPD": 25,
     "logging": {

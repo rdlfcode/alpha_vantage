@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import alpha_vantage_api as ava
 import logging
 from rate_limiter import RateLimiter
+import duckdb
 
 load_dotenv()
 
@@ -194,84 +195,59 @@ def fetch_data_df(endpoint_name, params) -> pd.DataFrame:
     return df
 
 
-def get_timeseries_data(
-    endpoints: dict, stock_symbols: list, save: bool = True
-) -> pd.DataFrame:
+def download_all_data(endpoints: dict, stock_symbols: list, force_refresh: bool = False):
     """
-    Fetches data for multiple endpoints, separates symbol-specific from macro data,
-    and constructs a final dataset for machine learning.
+    Iterates through all endpoints and symbols, downloading data and saving it to Parquet files.
     """
-    macro_endpoints = {}
-    symbol_endpoints = {}
+    data_dir = Path(settings["data_dir"])
+    data_dir.mkdir(exist_ok=True)
 
-    for name, params in endpoints.items():
-        if any(key in params for key in ["symbol", "symbols", "tickers"]):
-            symbol_endpoints[name] = params
-        else:
-            macro_endpoints[name] = params
+    macro_endpoints = {n: p for n, p in endpoints.items() if "symbol" not in p}
+    symbol_endpoints = {n: p for n, p in endpoints.items() if "symbol" in p}
 
-    # 1. Fetch and combine all macro data
-    macro_dfs = []
+    # Download macro data
     for name, params in macro_endpoints.items():
-        df = fetch_data_df(name, params)
-        if not df.empty:
-            # Add prefix to avoid column name collisions
-            df = df.add_prefix(f"{name}_")
-            macro_dfs.append(df)
+        filepath = data_dir / (generate_filename(name, params) + ".parquet")
+        if not filepath.exists() or force_refresh:
+            logger.info(f"Fetching '{name}'...")
+            df = fetch_data_df(name, params)
+            if not df.empty:
+                # No need to save here as the decorator does it
+                pass
+        else:
+            logger.info(f"'{name}' data already cached at {filepath}. Skipping download.")
 
-    macro_data = pd.DataFrame()
-    if macro_dfs:
-        macro_data = pd.concat(macro_dfs, axis=1)
-        # Back-fill macro data to align with daily stock data
-        macro_data = macro_data.bfill()
-
-    # 2. Fetch data for each symbol and combine with macro data
-    all_symbol_data = []
+    # Download data for each symbol
     for symbol in stock_symbols:
-        symbol_dfs = []
         for name, params in symbol_endpoints.items():
-            # Create a copy of params and update the symbol
             p = params.copy()
             p["symbol"] = symbol
+            filepath = data_dir / (generate_filename(name, p) + ".parquet")
+            if not filepath.exists() or force_refresh:
+                logger.info(f"Fetching '{name}' for symbol '{symbol}'...")
+                df = fetch_data_df(name, p)
+                if not df.empty:
+                    # No need to save here as the decorator does it
+                    pass
+            else:
+                logger.info(
+                    f"'{name}' for '{symbol}' already cached at {filepath}. Skipping download."
+                )
 
-            df = fetch_data_df(name, p)
-            if not df.empty:
-                # Add prefix for clarity
-                df = df.add_prefix(f"{name}_")
-                symbol_dfs.append(df)
 
-        if not symbol_dfs:
-            continue
-
-        # Combine all data for the current symbol
-        combined_symbol_df = pd.concat(symbol_dfs, axis=1)
-        combined_symbol_df["symbol"] = symbol
-        all_symbol_data.append(combined_symbol_df)
-
-    if not all_symbol_data:
+def get_dataset(sql_query: str) -> pd.DataFrame:
+    """
+    Executes a SQL query using DuckDB on the cached Parquet files and returns a DataFrame.
+    """
+    try:
+        con = duckdb.connect(database=settings["db_path"], read_only=False)
+        logger.info(f"Executing query:\n{sql_query}")
+        result_df = con.execute(sql_query).fetchdf()
+        con.close()
+        return result_df
+    except Exception as e:
+        logger.error(f"DuckDB query failed: {e}")
         return pd.DataFrame()
-
-    # 3. Combine all symbols into one large DataFrame
-    final_df = pd.concat(all_symbol_data, axis=0, sort=True)
-
-    # Reset index to bring datetime into a column, then set multi-index
-    final_df.reset_index(inplace=True)
-    final_df.rename(columns={"index": "date"}, inplace=True)
-
-    # 4. Join with macro data
-    if not macro_data.empty:
-        # Use merge_asof for precise point-in-time joining
-        if "date" in final_df.columns:
-            final_df = final_df.sort_values("date")
-        macro_data = macro_data.sort_index()
-        final_df = pd.merge_asof(
-            final_df, macro_data, left_on="date", right_index=True, direction="backward"
-        )
-
-    # Set final index
-    final_df.set_index(["date", "symbol"], inplace=True)
-
-    return final_df
 
 
 # Read stock symbols from a file
@@ -322,17 +298,137 @@ if __name__ == "__main__":
     data_dir = Path(settings["data_dir"])
     data_dir.mkdir(exist_ok=True)
 
-    # Fetch all data and create the timeseries dataset
-    ts_dataset = get_timeseries_data(ENDPOINTS, STOCK_SYMBOLS, save=True)
+    # Phase 1: Download all required data, with an option to force a refresh
+    # Set force_refresh=True to re-download all data
+    download_all_data(ENDPOINTS, STOCK_SYMBOLS, force_refresh=False)
 
-    if not ts_dataset.empty:
-        # Save the final combined dataset
-        output_path = data_dir / "ml_dataset.parquet"
-        ts_dataset.to_parquet(output_path)
-        logger.info(f"\nSuccessfully created and saved the final dataset to {output_path}")
-        logger.info("\nDataset Info:")
-        ts_dataset.info()
-        logger.info("\nDataset Head:")
-        logger.info(ts_dataset.head())
+    # Phase 2: Build dataset using DuckDB
+    # This query replicates the logic of the original get_timeseries_data function.
+    con = duckdb.connect(database=settings["db_path"], read_only=False)
+
+    # Identify macro and symbol endpoints from the main ENDPOINTS dictionary
+    macro_endpoints = {n: p for n, p in ENDPOINTS.items() if "symbol" not in p}
+    symbol_endpoints = {n: p for n, p in ENDPOINTS.items() if "symbol" in p}
+
+    # --- Symbol Data CTEs ---
+    symbol_ctes = []
+    for symbol in STOCK_SYMBOLS:
+        for name, params in symbol_endpoints.items():
+            p = params.copy()
+            p["symbol"] = symbol
+            file_path = data_dir / (generate_filename(name, p) + ".parquet")
+            if file_path.exists():
+                # Use symbol as the CTE name to avoid duplicates
+                cte_name = f"{name}_{symbol}".replace("-", "_")
+                symbol_ctes.append(
+                    f"""
+                {cte_name} AS (
+                    SELECT *, '{symbol}' as symbol FROM read_parquet('{file_path}')
+                )"""
+                )
+
+    # --- Macro Data CTEs ---
+    macro_ctes = []
+    for name, params in macro_endpoints.items():
+        file_path = data_dir / (generate_filename(name, params) + ".parquet")
+        if file_path.exists():
+            # Prefix columns with the endpoint name to avoid collisions
+            cols_prefixed = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{file_path}')").fetchall()
+            select_list = ", ".join([f'"{col[0]}" as {name}_{col[0]}' for col in cols_prefixed])
+
+            macro_ctes.append(
+                f"""
+            {name} AS (
+                SELECT {select_list} FROM read_parquet('{file_path}')
+            )"""
+            )
+
+    # --- Main Query Construction ---
+    query = "WITH "
+
+    # Add all CTEs
+    all_ctes = symbol_ctes + macro_ctes
+    query += ",\n".join(all_ctes)
+
+    # Combine all symbol data
+    # This assumes a common 'date' column exists after being processed by fetch_data_df
+    # and that the data is daily or can be aggregated to daily.
+    # For simplicity, we'll focus on TIME_SERIES_DAILY as the base for joining.
+    
+    # Create a base of all dates and symbols
+    all_symbol_dates_parts = []
+    for symbol in STOCK_SYMBOLS:
+        p = ENDPOINTS["TIME_SERIES_DAILY"].copy()
+        p["symbol"] = symbol
+        file_path = data_dir / (generate_filename("TIME_SERIES_DAILY", p) + ".parquet")
+        if file_path.exists():
+            all_symbol_dates_parts.append(f"SELECT date, '{symbol}' as symbol FROM read_parquet('{file_path}')")
+    
+    all_symbol_dates_query = " UNION ALL ".join(all_symbol_dates_parts)
+
+    query += f"""
+    , all_symbol_dates AS (
+        {all_symbol_dates_query}
+    )
+    , combined_symbols AS (
+        SELECT *
+        FROM all_symbol_dates
+    """
+    # Left join all other symbol data onto the base time series
+    for symbol in STOCK_SYMBOLS:
+        for name in symbol_endpoints:
+            if name != "TIME_SERIES_DAILY":
+                 p = symbol_endpoints[name].copy()
+                 p["symbol"] = symbol
+                 file_path = data_dir / (generate_filename(name, p) + ".parquet")
+                 if file_path.exists():
+                    query += f"""
+                    LEFT JOIN {name}_{symbol} ON all_symbol_dates.date = {name}_{symbol}.date AND all_symbol_dates.symbol = {name}_{symbol}.symbol
+                    """
+    query += ")"
+
+    # ASOF join all macro data
+    query += """
+    , final_dataset AS (
+        SELECT
+            cs.*,
+    """
+    macro_cols = []
+    for name in macro_endpoints:
+        file_path = data_dir / (generate_filename(name, macro_endpoints[name]) + ".parquet")
+        if file_path.exists():
+            cols = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{file_path}')").fetchall()
+            macro_cols.extend([f'{name}_{col[0]}' for col in cols if col[0] != 'date'])
+
+    query += ",\n".join(macro_cols)
+    query += """
+        FROM combined_symbols cs
+    """
+    
+    # Chain ASOF joins for all macro tables
+    for i, name in enumerate(macro_endpoints):
+        file_path = data_dir / (generate_filename(name, macro_endpoints[name]) + ".parquet")
+        if file_path.exists():
+            join_alias = f"m{i}"
+            date_col_prefixed = f"{name}_date"
+            query += f"""
+            ASOF LEFT JOIN {name} {join_alias} ON cs.date >= {join_alias}.{date_col_prefixed}
+            """
+    query += """
+    )
+    SELECT * FROM final_dataset ORDER BY date DESC, symbol;
+    """
+    con.close()
+    final_dataset = get_dataset(query)
+
+    if not final_dataset.empty:
+        logger.info("\\nSuccessfully created dataset with DuckDB.")
+        output_path = data_dir / "final_dataset.parquet"
+        final_dataset.to_parquet(output_path)
+        logger.info(f"Saved final dataset to {output_path}")
+        logger.info("\\nDataset Info:")
+        final_dataset.info()
+        logger.info("\\nDataset Head:")
+        logger.info(final_dataset.head())
     else:
-        logger.error("\nCould not generate the dataset.")
+        logger.error("\\nCould not generate the dataset with DuckDB.")
