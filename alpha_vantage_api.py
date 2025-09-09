@@ -1,6 +1,28 @@
 BASE_URL = "https://www.alphavantage.co/query"
 
-alpha_vantage_schema = {
+# Define endpoint categories
+SYMBOL_ENDPOINTS = [
+    "TIME_SERIES_DAILY",
+    "INSIDER_TRANSACTIONS", 
+    "INCOME_STATEMENT",
+    "BALANCE_SHEET",
+    "CASH_FLOW",
+    "EARNINGS"
+]
+
+MACRO_ENDPOINTS = [
+    "WTI", "BRENT", "NATURAL_GAS",  # Energy
+    "COPPER", "ALUMINUM",  # Metals
+    "WHEAT", "CORN", "COTTON", "SUGAR", "COFFEE",  # Agriculture
+    "ALL_COMMODITIES",  # Commodity index
+    "REAL_GDP", "REAL_GDP_PER_CAPITA",  # GDP
+    "TREASURY_YIELD", "FEDERAL_FUNDS_RATE",  # Rates
+    "CPI", "INFLATION",  # Inflation
+    "RETAIL_SALES", "DURABLES",  # Consumer
+    "UNEMPLOYMENT", "NONFARM_PAYROLL"  # Employment
+]
+
+ALPHA_VANTAGE_SCHEMA = {
     # Core Stock APIs #########################################################
     "TIME_SERIES_INTRADAY": {
         "symbol": "string",  # e.g., "IBM"
@@ -326,7 +348,7 @@ alpha_vantage_schema = {
     "NONFARM_PAYROLL": {"datatype": ["json", "csv"]},
 }
 
-premium_endpoints = [
+PREMIUM_ENDPOINTS = [
     "TIME_SERIES_DAILY_ADJUSTED",
     "REALTIME_BULK_QUOTES",
     "REALTIME_OPTIONS",

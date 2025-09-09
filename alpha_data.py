@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from functools import wraps
+from typing import Optional, Dict, List
+from datetime import datetime
 from settings import settings
 import requests
 import pandas as pd
@@ -24,8 +26,18 @@ logger = logging.getLogger(__name__)
 # --- Rate Limiter ---
 rate_limiter = RateLimiter(
     requests_per_minute=settings["AlphaVantageRPM"],
-    requests_per_day=settings["AlphaVantageRPD"],
+    requests_per_day=settings["AlphaVantageRPD"]
 )
+
+
+def read_stock_symbols(file_path: str = "stocks.txt") -> List[str]:
+    """Read stock symbols from a file, one per line."""
+    try:
+        with open(file_path, "r") as f:
+            return sorted(list(set([line.strip() for line in f if line.strip()])))
+    except FileNotFoundError:
+        logger.error(f"{file_path} not found. Using default symbols.")
+        return ["IBM", "AAPL"]
 
 
 def generate_filename(endpoint_name, params) -> str:
@@ -61,7 +73,6 @@ def cache_to_parquet(data_dir):
     """
     Decorator to cache the output of a function to a Parquet file.
     """
-
     def decorator(func):
         @wraps(func)
         def wrapper(endpoint_name, params, *args, **kwargs):
@@ -81,9 +92,7 @@ def cache_to_parquet(data_dir):
                 logger.info(f"Saved to cache: {filepath}")
 
             return df
-
         return wrapper
-
     return decorator
 
 
@@ -191,7 +200,6 @@ def fetch_data_df(endpoint_name, params) -> pd.DataFrame:
         except Exception as e:
             logger.error(f"Error parsing JSON data for {endpoint_name}: {e}")
             df = pd.DataFrame()
-
     return df
 
 
@@ -250,185 +258,206 @@ def get_dataset(sql_query: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-# Read stock symbols from a file
-try:
-    with open("stocks.txt", "r") as f:
-        STOCK_SYMBOLS = sorted(list(set([line.strip() for line in f if line.strip()])))
-except FileNotFoundError:
-    logger.error("stocks.txt not found. Using default symbols.")
-    STOCK_SYMBOLS = ["IBM", "AAPL"]
-
-# Define non-premium endpoints and their parameters
-ENDPOINTS = {
-    "TIME_SERIES_DAILY": {
-        "symbol": STOCK_SYMBOLS,
-        "outputsize": "full",
-        "datatype": "csv",
-    },
-    "INSIDER_TRANSACTIONS": {"symbol": STOCK_SYMBOLS},
-    "INCOME_STATEMENT": {"symbol": STOCK_SYMBOLS},
-    "BALANCE_SHEET": {"symbol": STOCK_SYMBOLS},
-    "CASH_FLOW": {"symbol": STOCK_SYMBOLS},
-    "EARNINGS": {"symbol": STOCK_SYMBOLS},
-    "WTI": {"interval": "daily", "datatype": "csv"},
-    "BRENT": {"interval": "daily", "datatype": "csv"},
-    "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
-    "COPPER": {"interval": "monthly", "datatype": "csv"},
-    "ALUMINUM": {"interval": "monthly", "datatype": "csv"},
-    "WHEAT": {"interval": "monthly", "datatype": "csv"},
-    "CORN": {"interval": "monthly", "datatype": "csv"},
-    "COTTON": {"interval": "monthly", "datatype": "csv"},
-    "SUGAR": {"interval": "monthly", "datatype": "csv"},
-    "COFFEE": {"interval": "monthly", "datatype": "csv"},
-    "ALL_COMMODITIES": {"interval": "monthly", "datatype": "csv"},
-    "REAL_GDP": {"interval": "annual", "datatype": "csv"},
-    "REAL_GDP_PER_CAPITA": {"datatype": "csv"},
-    "TREASURY_YIELD": {"interval": "daily", "maturity": "10year"},
-    "FEDERAL_FUNDS_RATE": {"interval": "daily", "datatype": "csv"},
-    "CPI": {"interval": "monthly", "datatype": "csv"},
-    "INFLATION": {"datatype": "csv"},
-    "RETAIL_SALES": {"datatype": "csv"},
-    "DURABLES": {"datatype": "csv"},
-    "UNEMPLOYMENT": {"datatype": "csv"},
-    "NONFARM_PAYROLL": {"datatype": "csv"},
-}
-
-if __name__ == "__main__":
+def fetch_alpha_vantage_data(symbols: Optional[List[str]] = None, 
+                        endpoints: Optional[Dict[str, Dict]] = None, 
+                        start_date: Optional[str] = None, 
+                        end_date: Optional[str] = None,
+                        force_refresh: bool = False) -> pd.DataFrame:
+    """
+    Main function to fetch and process Alpha Vantage data.
+    
+    Args:
+        symbols: List of stock symbols to fetch data for. If None, uses STOCK_SYMBOLS.
+        endpoints: Dictionary of endpoints and their parameters. If None, uses ENDPOINTS.
+        start_date: Start date for the data in YYYY-MM-DD format. If None, fetches all available data.
+        end_date: End date for the data in YYYY-MM-DD format. If None, uses current date.
+        force_refresh: Whether to force refresh all data regardless of what's cached.
+    
+    Returns:
+        DataFrame containing the combined dataset with all requested data.
+    """
+    # Set defaults
+    symbols = symbols or STOCK_SYMBOLS
+    endpoints = endpoints or ENDPOINTS
+    end_date = end_date or datetime.now().strftime('%Y-%m-%d')
+    
     # Create data directory if it doesn't exist
     data_dir = Path(settings["data_dir"])
     data_dir.mkdir(exist_ok=True)
+    
+    # Filter endpoints to only include those specified in our categories
+    valid_endpoints = {k: v for k, v in endpoints.items() 
+                      if k in ava.SYMBOL_ENDPOINTS + ava.MACRO_ENDPOINTS}
+    
+    # Download all required data
+    download_all_data(valid_endpoints, symbols, force_refresh=force_refresh)
+    
+    # Build and return the combined dataset
+    return build_combined_dataset(symbols, valid_endpoints, start_date, end_date)
 
-    # Phase 1: Download all required data, with an option to force a refresh
-    # Set force_refresh=True to re-download all data
-    download_all_data(ENDPOINTS, STOCK_SYMBOLS, force_refresh=False)
 
-    # Phase 2: Build dataset using DuckDB
-    # This query replicates the logic of the original get_timeseries_data function.
+def build_combined_dataset(symbols: List[str], endpoints: Dict[str, Dict], 
+                        start_date: Optional[str] = None, 
+                        end_date: Optional[str] = None) -> pd.DataFrame:
+    """
+    Build a combined dataset from downloaded data files with optional date filtering.
+    
+    Args:
+        symbols: List of stock symbols to include.
+        endpoints: Dictionary of endpoints and their parameters.
+        start_date: Optional start date filter in YYYY-MM-DD format.
+        end_date: Optional end date filter in YYYY-MM-DD format.
+    
+    Returns:
+        DataFrame containing the combined dataset.
+    """
     con = duckdb.connect(database=settings["db_path"], read_only=False)
-
-    # Identify macro and symbol endpoints from the main ENDPOINTS dictionary
-    macro_endpoints = {n: p for n, p in ENDPOINTS.items() if "symbol" not in p}
-    symbol_endpoints = {n: p for n, p in ENDPOINTS.items() if "symbol" in p}
-
-    # --- Symbol Data CTEs ---
-    symbol_ctes = []
-    for symbol in STOCK_SYMBOLS:
-        for name, params in symbol_endpoints.items():
-            p = params.copy()
-            p["symbol"] = symbol
-            file_path = data_dir / (generate_filename(name, p) + ".parquet")
+    data_dir = Path(settings["data_dir"])
+    
+    # Build query components for each data type
+    ctes = []
+    base_tables = []
+    
+    # Process symbol-specific data
+    for symbol in symbols:
+        for name in [ep for ep in endpoints if ep in ava.SYMBOL_ENDPOINTS]:
+            params = endpoints[name].copy()
+            params["symbol"] = symbol
+            file_path = data_dir / (generate_filename(name, params) + ".parquet")
             if file_path.exists():
-                # Use symbol as the CTE name to avoid duplicates
-                cte_name = f"{name}_{symbol}".replace("-", "_")
-                symbol_ctes.append(
-                    f"""
-                {cte_name} AS (
-                    SELECT *, '{symbol}' as symbol FROM read_parquet('{file_path}')
-                )"""
-                )
-
-    # --- Macro Data CTEs ---
-    macro_ctes = []
-    for name, params in macro_endpoints.items():
+                table_name = f"{name}_{symbol}".lower()
+                cte = f"""
+                    {table_name} AS (
+                        SELECT *,
+                        '{symbol}' as symbol
+                        FROM read_parquet('{file_path}')
+                        WHERE 1=1
+                        {f"AND date >= '{start_date}'" if start_date else ""}
+                        {f"AND date <= '{end_date}'" if end_date else ""}
+                    )
+                """
+                ctes.append(cte.strip())
+                if name == "TIME_SERIES_DAILY":
+                    base_tables.append(table_name)
+                    
+    # Process macro endpoints
+    for name in [ep for ep in endpoints if ep in ava.MACRO_ENDPOINTS]:
+        params = endpoints[name]
         file_path = data_dir / (generate_filename(name, params) + ".parquet")
         if file_path.exists():
-            # Prefix columns with the endpoint name to avoid collisions
-            cols_prefixed = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{file_path}')").fetchall()
-            select_list = ", ".join([f'"{col[0]}" as {name}_{col[0]}' for col in cols_prefixed])
-
-            macro_ctes.append(
-                f"""
-            {name} AS (
-                SELECT {select_list} FROM read_parquet('{file_path}')
-            )"""
-            )
-
-    # --- Main Query Construction ---
-    query = "WITH "
-
-    # Add all CTEs
-    all_ctes = symbol_ctes + macro_ctes
-    query += ",\n".join(all_ctes)
-
-    # Combine all symbol data
-    # This assumes a common 'date' column exists after being processed by fetch_data_df
-    # and that the data is daily or can be aggregated to daily.
-    # For simplicity, we'll focus on TIME_SERIES_DAILY as the base for joining.
-    
-    # Create a base of all dates and symbols
-    all_symbol_dates_parts = []
-    for symbol in STOCK_SYMBOLS:
-        p = ENDPOINTS["TIME_SERIES_DAILY"].copy()
-        p["symbol"] = symbol
-        file_path = data_dir / (generate_filename("TIME_SERIES_DAILY", p) + ".parquet")
-        if file_path.exists():
-            all_symbol_dates_parts.append(f"SELECT date, '{symbol}' as symbol FROM read_parquet('{file_path}')")
-    
-    all_symbol_dates_query = " UNION ALL ".join(all_symbol_dates_parts)
-
-    query += f"""
-    , all_symbol_dates AS (
-        {all_symbol_dates_query}
-    )
-    , combined_symbols AS (
-        SELECT *
-        FROM all_symbol_dates
-    """
-    # Left join all other symbol data onto the base time series
-    for symbol in STOCK_SYMBOLS:
-        for name in symbol_endpoints:
-            if name != "TIME_SERIES_DAILY":
-                 p = symbol_endpoints[name].copy()
-                 p["symbol"] = symbol
-                 file_path = data_dir / (generate_filename(name, p) + ".parquet")
-                 if file_path.exists():
-                    query += f"""
-                    LEFT JOIN {name}_{symbol} ON all_symbol_dates.date = {name}_{symbol}.date AND all_symbol_dates.symbol = {name}_{symbol}.symbol
-                    """
-    query += ")"
-
-    # ASOF join all macro data
-    query += """
-    , final_dataset AS (
-        SELECT
-            cs.*,
-    """
-    macro_cols = []
-    for name in macro_endpoints:
-        file_path = data_dir / (generate_filename(name, macro_endpoints[name]) + ".parquet")
-        if file_path.exists():
-            cols = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{file_path}')").fetchall()
-            macro_cols.extend([f'{name}_{col[0]}' for col in cols if col[0] != 'date'])
-
-    query += ",\n".join(macro_cols)
-    query += """
-        FROM combined_symbols cs
-    """
-    
-    # Chain ASOF joins for all macro tables
-    for i, name in enumerate(macro_endpoints):
-        file_path = data_dir / (generate_filename(name, macro_endpoints[name]) + ".parquet")
-        if file_path.exists():
-            join_alias = f"m{i}"
-            date_col_prefixed = f"{name}_date"
-            query += f"""
-            ASOF LEFT JOIN {name} {join_alias} ON cs.date >= {join_alias}.{date_col_prefixed}
+            table_name = name.lower()
+            cte = f"""
+                {table_name} AS (
+                    SELECT *
+                    FROM read_parquet('{file_path}')
+                    WHERE 1=1
+                    {f"AND date >= '{start_date}'" if start_date else ""}
+                    {f"AND date <= '{end_date}'" if end_date else ""}
+                )
             """
-    query += """
-    )
-    SELECT * FROM final_dataset ORDER BY date DESC, symbol;
+            ctes.append(cte.strip())
+            
+    # Build the main query
+    if not base_tables:
+        logger.warning("No time series data found for any symbol")
+        return pd.DataFrame()
+    
+    # Start with time series data as base
+    query = "WITH " + ",\n".join(ctes)
+    
+    # Join all symbol data first
+    query += f"""
+        , combined_base AS (
+            SELECT * FROM {base_tables[0]}
+            {' UNION ALL '.join(f'SELECT * FROM {t}' for t in base_tables[1:])}
+        )
+        , enriched_symbols AS (
+            SELECT cb.*
+            FROM combined_base cb
     """
-    con.close()
-    final_dataset = get_dataset(query)
+    
+    # Join additional symbol data
+    for symbol in symbols:
+        for name in [ep for ep in endpoints if ep in ava.SYMBOL_ENDPOINTS and ep != "TIME_SERIES_DAILY"]:
+            table_name = f"{name}_{symbol}".lower()
+            if f"{table_name} AS" in query:  # Check if we have this data
+                query += f"""
+                    LEFT JOIN {table_name} USING (date, symbol)
+                """
+                
+    query += ")"
+    
+    # Join macro data last
+    query += """
+        SELECT es.*
+    """
+    
+    # Add macro columns
+    macro_joins = []
+    for name in [ep for ep in endpoints if ep in ava.MACRO_ENDPOINTS]:
+        table_name = name.lower()
+        if f"{table_name} AS" in query:  # Check if we have this data
+            query += f", {table_name}.*"
+            macro_joins.append(f"""
+                LEFT JOIN {table_name}
+                ON es.date >= {table_name}.date
+                AND es.date < LEAD({table_name}.date, 1) OVER (ORDER BY {table_name}.date)
+            """)
+    
+    query += " FROM enriched_symbols es"
+    query += " ".join(macro_joins)
+    query += " ORDER BY date DESC, symbol;"
+    
+    try:
+        result_df = get_dataset(query)
+        con.close()
+        
+        if not result_df.empty:
+            output_path = data_dir / "final_dataset.parquet"
+            result_df.to_parquet(output_path)
+        
+        return result_df
+        
+    except Exception as e:
+        logger.error(f"Error building combined dataset: {e}")
+        return pd.DataFrame()
 
-    if not final_dataset.empty:
-        logger.info("\\nSuccessfully created dataset with DuckDB.")
-        output_path = data_dir / "final_dataset.parquet"
-        final_dataset.to_parquet(output_path)
-        logger.info(f"Saved final dataset to {output_path}")
-        logger.info("\\nDataset Info:")
-        final_dataset.info()
-        logger.info("\\nDataset Head:")
-        logger.info(final_dataset.head())
-    else:
-        logger.error("\\nCould not generate the dataset with DuckDB.")
+
+if __name__ == "__main__":
+    # This section is just for testing/demonstration
+
+    # Read stock symbols from the configuration file
+    STOCK_SYMBOLS = read_stock_symbols()
+
+    # Define endpoint parameters (None for symbol, will be filled in later)
+    ENDPOINTS = {
+        "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
+        "INSIDER_TRANSACTIONS": {"symbol": None},
+        "INCOME_STATEMENT": {"symbol": None},
+        "BALANCE_SHEET": {"symbol": None},
+        "CASH_FLOW": {"symbol": None},
+        "EARNINGS": {"symbol": None},
+        "WTI": {"interval": "daily", "datatype": "csv"},
+        "BRENT": {"interval": "daily", "datatype": "csv"},
+        "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
+        "COPPER": {"interval": "monthly", "datatype": "csv"},
+        "ALUMINUM": {"interval": "monthly", "datatype": "csv"},
+        "WHEAT": {"interval": "monthly", "datatype": "csv"},
+        "CORN": {"interval": "monthly", "datatype": "csv"},
+        "COTTON": {"interval": "monthly", "datatype": "csv"},
+        "SUGAR": {"interval": "monthly", "datatype": "csv"},
+        "COFFEE": {"interval": "monthly", "datatype": "csv"},
+        "ALL_COMMODITIES": {"interval": "monthly", "datatype": "csv"},
+        "REAL_GDP": {"interval": "annual", "datatype": "csv"},
+        "REAL_GDP_PER_CAPITA": {"datatype": "csv"},
+        "TREASURY_YIELD": {"interval": "daily", "maturity": "10year"},
+        "FEDERAL_FUNDS_RATE": {"interval": "daily", "datatype": "csv"},
+        "CPI": {"interval": "monthly", "datatype": "csv"},
+        "INFLATION": {"datatype": "csv"},
+        "RETAIL_SALES": {"datatype": "csv"},
+        "DURABLES": {"datatype": "csv"},
+        "UNEMPLOYMENT": {"datatype": "csv"},
+        "NONFARM_PAYROLL": {"datatype": "csv"},
+    }
+
+    df = fetch_alpha_vantage_data(symbols=STOCK_SYMBOLS, endpoints=ENDPOINTS, force_refresh=False)
