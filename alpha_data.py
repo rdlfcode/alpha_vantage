@@ -158,18 +158,3 @@ def fetch_alpha_vantage_data(symbols: Optional[List[str]] = None,
 
     return build_combined_dataset(client, symbols, valid_endpoints, start_date, end_date)
 
-if __name__ == "__main__":
-    STOCK_SYMBOLS = read_stock_symbols()
-    ENDPOINTS = {
-        "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
-        "INSIDER_TRANSACTIONS": {"symbol": None},
-        "INCOME_STATEMENT": {"symbol": None},
-        "BALANCE_SHEET": {"symbol": None},
-        "CASH_FLOW": {"symbol": None},
-        "EARNINGS": {"symbol": None},
-        "WTI": {"interval": "daily", "datatype": "csv"},
-        "BRENT": {"interval": "daily", "datatype": "csv"},
-        # ... (add other endpoints as needed)
-    }
-    df = fetch_alpha_vantage_data(symbols=STOCK_SYMBOLS, endpoints=ENDPOINTS, force_refresh=False)
-    print(df.head())
