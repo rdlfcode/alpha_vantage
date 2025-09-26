@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Union
 from dotenv import load_dotenv
 
-from alpha_vantage_schema import BASE_URL, SYMBOL_ENDPOINTS, MACRO_ENDPOINTS, ALPHA_VANTAGE_SCHEMA
+from alpha_vantage_schema import BASE_URL, SYMBOL_ENDPOINTS, MACRO_ENDPOINTS
 from rate_limiter import RateLimiter
 from settings import settings
 
@@ -32,7 +32,6 @@ logging.basicConfig(
     format=log_settings.get("format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
 )
 logger = logging.getLogger(__name__)
-
 
 class AlphaVantageClient:
     """
@@ -92,7 +91,7 @@ class AlphaVantageClient:
 
         return "_".join(filename_parts)
 
-    def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str]]:
+    def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str, None]]:
         """
         Fetches data from a single Alpha Vantage endpoint.
         
@@ -144,10 +143,10 @@ class AlphaVantageClient:
         Returns:
             Parsed DataFrame
         """
-        if data is None:
-            return pd.DataFrame()
-
         df = pd.DataFrame()
+
+        if data is None:
+            return df
         
         try:
             if params.get("datatype", "json") == "csv" and isinstance(data, str):

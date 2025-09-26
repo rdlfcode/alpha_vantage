@@ -4,10 +4,35 @@ Utility functions for Alpha Vantage data processing.
 
 import pandas as pd
 import duckdb
-from typing import List, Dict, Optional
+from typing import List
 import logging
+from alpha_vantage_schema import ALPHA_VANTAGE_SCHEMA
 
 logger = logging.getLogger(__name__)
+
+
+def get_default_params(endpoint_name: str) -> dict:
+    """
+    Get default parameters for a given endpoint from the schema.
+    This function simplifies parameter creation by extracting the first valid
+    value for parameters that require a specific choice (e.g., interval).
+    """
+    params = {}
+    if endpoint_name in ALPHA_VANTAGE_SCHEMA:
+        for param, values in ALPHA_VANTAGE_SCHEMA[endpoint_name].items():
+            if isinstance(values, list):
+                # Use the first value as the default for list-based params
+                params[param] = values[0]
+            elif values == "string":
+                # Skip string parameters like 'symbol' which are handled separately
+                continue
+            else:
+                params[param] = values
+    return params
+
+
+def get_default_endpoints() -> dict:
+    return {name: get_default_params(name) for name in ALPHA_VANTAGE_SCHEMA}
 
 
 def read_stock_symbols(file_path: str = "stocks.txt") -> List[str]:
