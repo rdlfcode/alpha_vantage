@@ -4,7 +4,7 @@ Utility functions for Alpha Vantage data processing.
 
 import pandas as pd
 import duckdb
-from typing import List
+from typing import List, Dict, Optional, Union
 import logging
 from alpha_vantage_schema import ALPHA_VANTAGE_SCHEMA
 
@@ -31,8 +31,9 @@ def get_default_params(endpoint_name: str) -> dict:
     return params
 
 
-def get_default_endpoints() -> dict:
-    return {name: get_default_params(name) for name in ALPHA_VANTAGE_SCHEMA}
+def get_default_endpoints(endpoints: Optional[Union[Dict, List]] = None) -> dict:
+    endpoints = endpoints or ALPHA_VANTAGE_SCHEMA
+    return {name: get_default_params(name) for name in endpoints}
 
 
 def read_stock_symbols(file_path: str = "stocks.txt") -> List[str]:

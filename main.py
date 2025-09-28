@@ -1,18 +1,20 @@
-from alpha_vantage import fetch_alpha_vantage_data
-from utils import read_stock_symbols, get_default_endpoints
+from dotenv import load_dotenv
+from alpha_vantage import AlphaVantageClient
+from utils import get_default_endpoints
 
 if __name__ == "__main__":
-    # Read stock symbols from file
-    stock_symbols = read_stock_symbols()
+    load_dotenv()
+
+    # Create AV client (for reuse later)
+    client = AlphaVantageClient()
 
     # Dynamically create endpoints from the schema
     endpoints = get_default_endpoints()
 
     # Fetch the data
-    df = fetch_alpha_vantage_data(
-        symbols=stock_symbols, 
-        endpoints=endpoints, 
-        force_refresh=False
+    df = client.get_data(
+        endpoints=endpoints,
+        force_refresh=True
     )
 
     # Print the first few rows of the combined DataFrame
@@ -21,4 +23,3 @@ if __name__ == "__main__":
         print(df.head())
     else:
         print("Could not fetch any data.")
-
