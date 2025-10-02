@@ -788,7 +788,7 @@ Python NodeJS PHP C#/.NET ✨MCP & Other
 import requests
 
 # replace the "demo" apikey below with your own key from https://www.alphavantage.co/support/#api-key
-url = 'https://www.alphavantage.co/query?function=INSIDER_TRANSACTIONS&symbol=IBM&apikey=demo'
+url = 'https://www.alphavantage.co/query?function=EARNINGS_CALL_TRANSCRIPT&symbol=IBM&quarter=2024Q1&apikey=demo'
 r = requests.get(url)
 data = r.json()
 
@@ -2838,9 +2838,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -2898,9 +2896,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -2958,9 +2954,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3014,9 +3008,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3070,9 +3062,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3126,9 +3116,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3182,9 +3170,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3238,9 +3224,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -3298,7 +3282,7 @@ Time interval between two consecutive data points in the time series. In keeping
 
 ❚ Optional: month
 
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: datatype
 
@@ -3329,7 +3313,7 @@ print(data)
 
 T3
 
-This API returns the triple exponential moving average (T3) values. See also: mathematical reference.
+This API returns the Tilson moving average (T3) values. See also: mathematical reference.
 
 
 API Parameters
@@ -3347,9 +3331,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3403,9 +3385,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -3474,9 +3454,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -3550,9 +3528,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: fastkperiod
 
@@ -3622,9 +3598,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: fastkperiod
 
@@ -3682,9 +3656,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3742,9 +3714,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3810,9 +3780,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3862,9 +3830,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3918,9 +3884,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -3970,9 +3934,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -4034,9 +3996,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -4098,9 +4058,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4154,9 +4112,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: datatype
 
@@ -4202,9 +4158,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4258,9 +4212,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4314,9 +4266,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4370,9 +4320,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4426,9 +4374,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4482,9 +4428,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4534,9 +4478,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4586,9 +4528,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4642,9 +4582,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: timeperiod1
 
@@ -4704,9 +4642,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4756,9 +4692,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4808,9 +4742,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4860,9 +4792,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4912,9 +4842,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -4964,9 +4892,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -5036,9 +4962,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -5092,9 +5016,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -5144,9 +5066,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: acceleration
 
@@ -5200,9 +5120,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: datatype
 
@@ -5248,9 +5166,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -5300,9 +5216,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required:time_period
 
@@ -5352,9 +5266,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: datatype
 
@@ -5400,9 +5312,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: fastperiod
 
@@ -5456,9 +5366,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Optional: datatype
 
@@ -5504,9 +5412,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -5556,9 +5462,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -5608,9 +5512,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -5660,9 +5562,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -5712,9 +5612,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 
@@ -5764,9 +5662,7 @@ Time interval between two consecutive data points in the time series. The follow
 
 ❚ Optional: month
 
-Note: this parameter is ONLY applicable to intraday intervals (1min, 5min, 15min, 30min, and 60min) for the equity markets. The daily/weekly/monthly intervals are agnostic to this parameter.
-
-By default, this parameter is not set and the technical indicator values will be calculated based on the most recent 30 days of intraday data. You can use the month parameter (in YYYY-MM format) to compute intraday technical indicators for a specific month in history. For example, month=2009-01. Any month equal to or later than 2000-01 (January 2000) is supported.
+By default, this parameter is not set and the technical indicator values will be calculated based on the default length of the underlying intraday, daily, weekly, or monthly time series data. You can use the month parameter (in YYYY-MM format) to return technical indicators for a specific month in history. For example, month=2009-01.
 
 ❚ Required: series_type
 

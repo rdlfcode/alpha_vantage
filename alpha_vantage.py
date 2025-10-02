@@ -16,7 +16,7 @@ from typing import Optional, Dict, List, Union
 from dotenv import load_dotenv
 
 from alpha_vantage_schema import BASE_URL, SYMBOL_ENDPOINTS, MACRO_ENDPOINTS
-from utils import read_stock_symbols
+from utils import read_stock_symbols, get_endpoints
 from rate_limiter import RateLimiter
 from settings import settings
 
@@ -41,8 +41,10 @@ class AlphaVantageClient:
     Handles data fetching, parsing, caching, and rate limiting in a unified interface.
     """
     
-    def __init__(self, api_key: Optional[str] = None, data_dir: Optional[str] = None, 
-                 db_path: Optional[str] = None, requests_per_minute: Optional[int] = None, 
+    def __init__(self, api_key: Optional[str] = None,
+                 data_dir: Optional[str] = None, 
+                 db_path: Optional[str] = None,
+                 requests_per_minute: Optional[int] = None, 
                  requests_per_day: Optional[int] = None):
         """
         Initialize the Alpha Vantage client.
@@ -153,14 +155,7 @@ class AlphaVantageClient:
             if params.get("datatype", "json") == "csv" and isinstance(data, str):
                 # Parse CSV response
                 df = pd.read_csv(StringIO(data))
-                
-                # Standardize date column
-                if "timestamp" in df.columns:
-                    df.rename(columns={"timestamp": "date"}, inplace=True)
-                if "date" in df.columns:
-                    df["date"] = pd.to_datetime(df["date"])
-                    df.set_index("date", inplace=True)
-                    
+
             elif isinstance(data, dict):
                 # Parse JSON response
                 if any("Time Series" in k for k in data.keys()):
@@ -171,44 +166,108 @@ class AlphaVantageClient:
                         df = pd.DataFrame.from_dict(time_series_data, orient="index")
                         df.index = pd.to_datetime(df.index)
                         df = df.apply(pd.to_numeric, errors="coerce")
-                        
+
                 elif any("data" in k.lower() for k in data.keys()):
                     # Economic indicators and commodities
                     data_key = next(k for k in data.keys() if "data" in k.lower())
                     time_series_data = data[data_key]
                     if isinstance(time_series_data, list):
                         df = pd.DataFrame(time_series_data)
-                        if "date" in df.columns:
-                            df["date"] = pd.to_datetime(df["date"])
-                            df.set_index("date", inplace=True)
                         # Convert numeric columns
                         numeric_cols = df.select_dtypes(include=['object']).columns
                         for col in numeric_cols:
                             df[col] = pd.to_numeric(df[col], errors='coerce')
-                            
+
                 elif any(k in data for k in ["quarterlyReports", "annualReports"]):
                     # Financial statements
                     reports_key = "quarterlyReports" if "quarterlyReports" in data else "annualReports"
                     df = pd.DataFrame(data[reports_key])
-                    if "fiscalDateEnding" in df.columns:
-                        df["fiscalDateEnding"] = pd.to_datetime(df["fiscalDateEnding"])
-                        df.set_index("fiscalDateEnding", inplace=True)
-                        
+
                 elif endpoint_name == "INSIDER_TRANSACTIONS" and "data" in data:
                     # Insider transactions
                     df = pd.DataFrame(data["data"])
-                    if "transactionDate" in df.columns:
-                        df["transactionDate"] = pd.to_datetime(df["transactionDate"])
-                        
+
                 else:
                     # Fallback for other structures
                     df = pd.DataFrame.from_dict(data, orient="index").transpose()
-                    
+
+            # Standardize datetime column
+            for col_name in ["timestamp", "fiscalDateEnding", "date"]:
+                if col_name in df.columns:
+                    df.rename(columns={col_name: "datetime"}, inplace=True)
+                    break
+            
+            if "datetime" in df.columns:
+                df["datetime"] = pd.to_datetime(df["datetime"])
+                df.set_index("datetime", inplace=True)
+            elif df.index.name in ["timestamp", "fiscalDateEnding", "date"]:
+                df.index.name = "datetime"
+
         except Exception as e:
             self.logger.error(f"Error parsing data for {endpoint_name}: {e}")
             return pd.DataFrame()
             
         return df
+
+    def _fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False) -> pd.DataFrame:
+        """
+        Fetches, parses, and caches data for a single endpoint call.
+        """
+        # Generate cache filename
+        filename = self._generate_filename(endpoint_name, params) + ".parquet"
+        filepath = self.data_dir / "files" / filename
+        
+        # Return cached data if available and not forcing refresh
+        if filepath.exists() and not force_refresh:
+            self.logger.info(f"Loading from cache: {filepath}")
+            try:
+                return pd.read_parquet(filepath)
+            except Exception as e:
+                self.logger.warning(f"Error loading cached data: {e}. Fetching fresh data.")
+        
+        # Fetch fresh data
+        raw_data = self._fetch_data(endpoint_name, params)
+        df = self._parse_response(endpoint_name, raw_data, params)
+
+        # Cache the data if not empty
+        if not df.empty:
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            df.to_parquet(filepath)
+            self.logger.info(f"Saved to cache: {filepath}")
+            
+            # Also save to database
+            self._save_to_database(endpoint_name, params, df)
+
+        return df
+
+    def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame):
+        """
+        Save DataFrame to SQLite database using the correct schema for each endpoint.
+        """
+        if df.empty:
+            self.logger.warning(f"No data to save for {endpoint_name} with params {params}")
+            return
+
+        import duckdb
+        from utils import generate_create_table_statement
+        table_name = endpoint_name.upper()
+        # Use schema from TABLE_SCHEMAS if available
+        from alpha_vantage_schema import TABLE_SCHEMAS
+        schema_dict = TABLE_SCHEMAS.get("CoreStockAPIs", {})
+        create_stmt = schema_dict.get(endpoint_name, None)
+        if not create_stmt:
+            # Fallback: generate from DataFrame
+            create_stmt = generate_create_table_statement(df, table_name)
+
+        try:
+            conn = duckdb.connect(self.db_path)
+            conn.execute(create_stmt)
+            conn.register(table_name, df)
+            conn.execute(f"INSERT INTO {table_name} SELECT * FROM {table_name}")
+            conn.close()
+            self.logger.info(f"Saved {len(df)} rows to {table_name}")
+        except Exception as e:
+            self.logger.error(f"Error saving to database for {endpoint_name}: {e}")
 
     def get_data(self, 
                  symbols: Optional[List[str]] = None,
@@ -218,6 +277,7 @@ class AlphaVantageClient:
                  force_refresh: bool = False) -> pd.DataFrame:
         """
         Fetches, parses, and caches data for given symbols and endpoints.
+        Gets all data by default.
         
         Args:
             symbols: List of stock symbols.
@@ -232,9 +292,7 @@ class AlphaVantageClient:
         try:
             symbols = symbols or read_stock_symbols()
             
-            if not endpoints:
-                self.logger.warning("No endpoints specified, returning empty DataFrame.")
-                return pd.DataFrame()
+            endpoints = endpoints or get_endpoints()
                 
             all_dfs = []
 
@@ -275,90 +333,6 @@ class AlphaVantageClient:
         except Exception as e:
             self.logger.error(f"Error in get_data: {e}", exc_info=True)
             return pd.DataFrame()
-
-    def _fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False) -> pd.DataFrame:
-        """
-        Fetches, parses, and caches data for a single endpoint call.
-        """
-        # Generate cache filename
-        filename = self._generate_filename(endpoint_name, params) + ".parquet"
-        filepath = self.data_dir / "files" / filename
-        
-        # Return cached data if available and not forcing refresh
-        if filepath.exists() and not force_refresh:
-            self.logger.info(f"Loading from cache: {filepath}")
-            try:
-                return pd.read_parquet(filepath)
-            except Exception as e:
-                self.logger.warning(f"Error loading cached data: {e}. Fetching fresh data.")
-        
-        # Fetch fresh data
-        raw_data = self._fetch_data(endpoint_name, params)
-        df = self._parse_response(endpoint_name, raw_data, params)
-
-        # Cache the data if not empty
-        if not df.empty:
-            filepath.parent.mkdir(parents=True, exist_ok=True)
-            df.to_parquet(filepath)
-            self.logger.info(f"Saved to cache: {filepath}")
-            
-            # Also save to database
-            self._save_to_database(endpoint_name, params, df)
-
-        return df
-
-
-    def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame):
-        """
-        Save DataFrame to SQLite database.
-        """
-        if df.empty:
-            return
-            
-        try:
-            # Create table name
-            table_name = self._generate_filename(endpoint_name, params).lower()
-            
-            # Connect to database and save
-            conn = duckdb.connect(self.db_path)
-            conn.execute(f"CREATE TABLE IF NOT EXISTS {table_name} AS SELECT * FROM df")
-            conn.close()
-            
-            self.logger.debug(f"Saved to database table: {table_name}")
-            
-        except Exception as e:
-            self.logger.warning(f"Error saving to database: {e}")
-
-    def download_all_data(self, endpoints: Dict, stock_symbols: Optional[List[str]] = None, 
-                         force_refresh: bool = False):
-        """
-        Downloads data for all specified endpoints and symbols.
-        
-        Args:
-            endpoints: Dictionary of endpoint configurations
-            stock_symbols: List of stock symbols for symbol-based endpoints
-            force_refresh: If True, bypass cache and fetch fresh data
-        """
-        stock_symbols = stock_symbols or []
-        
-        # Separate macro and symbol endpoints
-        macro_endpoints = {name: params for name, params in endpoints.items() 
-                          if name in MACRO_ENDPOINTS}
-        symbol_endpoints = {name: params for name, params in endpoints.items() 
-                           if name in SYMBOL_ENDPOINTS}
-
-        # Download macro data (no symbols required)
-        for name, params in macro_endpoints.items():
-            self.logger.info(f"Fetching macro data: {name}")
-            self._fetch_and_cache_data(name, params, force_refresh=force_refresh)
-
-        # Download symbol data
-        for symbol in stock_symbols:
-            for name, params in symbol_endpoints.items():
-                param_copy = params.copy()
-                param_copy["symbol"] = symbol
-                self.logger.info(f"Fetching {name} for symbol {symbol}")
-                self._fetch_and_cache_data(name, param_copy, force_refresh=force_refresh)
 
     def get_dataset_from_db(self, sql_query: str) -> pd.DataFrame:
         """
