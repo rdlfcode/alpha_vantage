@@ -30,10 +30,7 @@ load_dotenv()
 # =============================================================================
 
 log_settings = settings.get("logging", {})
-logging.basicConfig(
-    level=log_settings.get("level", "INFO"),
-    format=log_settings.get("format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"),
-)
+logging.basicConfig(**log_settings)
 logger = logging.getLogger(__name__)
 
 class AlphaVantageClient:
@@ -181,7 +178,7 @@ class AlphaVantageClient:
                         # Convert numeric columns
                         numeric_cols = df.select_dtypes(include=['object']).columns
                         for col in numeric_cols:
-                            df[col] = pd.to_numeric(df[col], errors='coerce')
+                            df.loc[:, col] = pd.to_numeric(df[col], errors='coerce')
 
                 elif any(k in data for k in ["quarterlyReports", "annualReports"]):
                     # Financial statements
@@ -199,7 +196,7 @@ class AlphaVantageClient:
                     break
             
             if "dt" in df.columns:
-                df["dt"] = pd.to_datetime(df["dt"])
+                df.loc[:, "dt"] = pd.to_datetime(df["dt"])
                 df.set_index("dt", inplace=True)
             elif df.index.name in ["timestamp", "fiscalDateEnding", "date"]:
                 df.index.name = "dt"
@@ -243,7 +240,7 @@ class AlphaVantageClient:
 
         return df
 
-    def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame):
+    def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
         """
         Save DataFrame to SQLite database using the correct schema for each endpoint.
         """
@@ -252,17 +249,16 @@ class AlphaVantageClient:
             return
 
         table_name = endpoint_name.upper()
+        conn = conn or duckdb.connect(self.db_path)
         
         try:
-            conn = duckdb.connect(self.db_path)
-            
             conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
-            
             conn.close()
             self.logger.info(f"Saved {len(df)} rows to {table_name}")
 
         except Exception as e:
             match e:
+                # Table doesn't exist
                 case duckdb.CatalogException:
                     conn = duckdb.connect(self.db_path)
                     conn.execute(TABLE_SCHEMAS.get(endpoint_name))

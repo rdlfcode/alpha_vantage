@@ -28,7 +28,7 @@ class RateLimiter:
 
         # Check day limit
         if len(self.day_timestamps) >= self.requests_per_day:
-            logger.error("Daily request limit reached. Cannot make more requests today.")
+            logger.info("Daily request limit reached. Cannot make more requests today.")
             raise Exception("Daily request limit reached.")
 
         # Check minute limit and wait if necessary

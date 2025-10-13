@@ -1,0 +1,33 @@
+2025-10-13 23:00:36,467 - alpha_vantage - INFO - Loading from cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
+2025-10-13 23:00:43,123 - alpha_vantage - INFO - Loading from cache: data/files/INSIDER_TRANSACTIONS/symbol_GOOG.parquet
+2025-10-13 23:00:43,125 - alpha_vantage - INFO - Loading from cache: data/files/INCOME_STATEMENT/symbol_GOOG.parquet
+2025-10-13 23:00:43,129 - alpha_vantage - INFO - Loading from cache: data/files/BALANCE_SHEET/symbol_GOOG.parquet
+2025-10-13 23:00:43,132 - alpha_vantage - INFO - Loading from cache: data/files/CASH_FLOW/symbol_GOOG.parquet
+2025-10-13 23:00:43,135 - alpha_vantage - INFO - Loading from cache: data/files/EARNINGS/symbol_GOOG.parquet
+2025-10-13 23:00:43,136 - alpha_vantage - INFO - Loading from cache: data/files/WTI/datatype_csv_interval_daily.parquet
+2025-10-13 23:00:43,137 - alpha_vantage - INFO - Loading from cache: data/files/BRENT/datatype_csv_interval_daily.parquet
+2025-10-13 23:00:43,139 - alpha_vantage - INFO - Loading from cache: data/files/NATURAL_GAS/datatype_csv_interval_daily.parquet
+2025-10-13 23:00:43,140 - alpha_vantage - INFO - Loading from cache: data/files/COPPER/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,141 - alpha_vantage - INFO - Loading from cache: data/files/ALUMINUM/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,142 - alpha_vantage - INFO - Loading from cache: data/files/WHEAT/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,142 - alpha_vantage - INFO - Loading from cache: data/files/CORN/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,143 - alpha_vantage - INFO - Loading from cache: data/files/COTTON/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,144 - alpha_vantage - INFO - Loading from cache: data/files/SUGAR/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,145 - alpha_vantage - INFO - Loading from cache: data/files/COFFEE/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,145 - alpha_vantage - INFO - Loading from cache: data/files/ALL_COMMODITIES/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,146 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP/datatype_csv_interval_quarterly.parquet
+2025-10-13 23:00:43,147 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP_PER_CAPITA/datatype_csv.parquet
+2025-10-13 23:00:43,147 - alpha_vantage - INFO - Loading from cache: data/files/TREASURY_YIELD/datatype_csv_interval_daily_maturity_3month.parquet
+2025-10-13 23:00:43,148 - alpha_vantage - INFO - Loading from cache: data/files/FEDERAL_FUNDS_RATE/datatype_csv_interval_daily.parquet
+2025-10-13 23:00:43,149 - alpha_vantage - INFO - Loading from cache: data/files/CPI/datatype_csv_interval_monthly.parquet
+2025-10-13 23:00:43,150 - alpha_vantage - INFO - Loading from cache: data/files/INFLATION/datatype_csv.parquet
+2025-10-13 23:00:43,151 - alpha_vantage - INFO - Loading from cache: data/files/RETAIL_SALES/datatype_csv.parquet
+2025-10-13 23:00:43,151 - alpha_vantage - INFO - Loading from cache: data/files/DURABLES/datatype_csv.parquet
+2025-10-13 23:00:43,152 - alpha_vantage - INFO - Fetching data for UNEMPLOYMENT with params: {'datatype': 'csv'}
+2025-10-13 23:00:43,523 - alpha_vantage - INFO - Saved to cache: data/files/UNEMPLOYMENT/datatype_csv.parquet
+2025-10-13 23:00:43,595 - alpha_vantage - ERROR - Error saving to database for UNEMPLOYMENT: Catalog Error: Table with name UNEMPLOYMENT does not exist!
+Did you mean "INCOME_STATEMENT"?
+2025-10-13 23:00:43,596 - alpha_vantage - INFO - Fetching data for NONFARM_PAYROLL with params: {'datatype': 'csv'}
+2025-10-13 23:00:43,828 - alpha_vantage - WARNING - API returned an error or note for NONFARM_PAYROLL: {
+    "Information": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage...
+2025-10-13 23:00:43,895 - alpha_vantage - INFO - Successfully built dataset with 87055 rows.

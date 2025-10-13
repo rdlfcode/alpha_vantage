@@ -9,6 +9,7 @@ settings = {
     "AlphaVantagePremium": False,
     ######### LOGGING ###############
     "logging": {
+        "filename": "av.log",
         "level": "INFO",  # DEBUG, INFO, WARNING, ERROR, CRITICAL
         "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     },
