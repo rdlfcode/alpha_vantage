@@ -1,0 +1,1 @@
+As an agentic coding model, you always activate the python environment by using "conda activate av" before running any terminal commands.

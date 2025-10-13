@@ -1,6 +1,7 @@
 settings = {
     ######### DATA ##################
     "data_dir": "data",
+    "data_ext": ".parquet",
     "db_path": "data/alpha_vantage.db",
     ######### ALPHA VANTAGE #########
     "AlphaVantageRPM": 75,

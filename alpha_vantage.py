@@ -9,13 +9,15 @@ import os
 import requests
 import pandas as pd
 import duckdb
+from duckdb import DuckDBPyConnection
+
 import logging
 from io import StringIO
 from pathlib import Path
 from typing import Optional, Dict, List, Union
 from dotenv import load_dotenv
 
-from alpha_vantage_schema import BASE_URL, SYMBOL_ENDPOINTS, MACRO_ENDPOINTS
+from alpha_vantage_schema import BASE_URL, SYMBOL_ENDPOINTS, MACRO_ENDPOINTS, TABLE_SCHEMAS
 from utils import read_stock_symbols, get_endpoints
 from rate_limiter import RateLimiter
 from settings import settings
@@ -73,18 +75,18 @@ class AlphaVantageClient:
         # Ensure data directory exists
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
-    def _generate_filename(self, endpoint_name: str, params: Dict) -> str:
+    def _generate_filepath(self, endpoint_name: str, params: Dict) -> Path:
         """
         Generates a consistent filename from the endpoint and its parameters.
         """
-        filename_parts = [endpoint_name]
+        filename_parts = []
         params_copy = params.copy()
 
         # Handle symbol-like parameters first
         symbol_like_keys = ["symbol", "keywords", "tickers", "from_symbol", "to_symbol"]
         for key in symbol_like_keys:
             if key in params_copy:
-                filename_parts.insert(1, f"symbol_{params_copy.pop(key)}")
+                filename_parts.append(f"symbol_{params_copy.pop(key)}")
                 break
 
         # Add other parameters in sorted order
@@ -92,7 +94,10 @@ class AlphaVantageClient:
             if key != "apikey" and isinstance(value, str):
                 filename_parts.append(f"{key}_{value}")
 
-        return "_".join(filename_parts)
+        filename = "_".join(filename_parts) + settings.get("data_ext", ".parquet")
+        path = self.data_dir / "files" / endpoint_name / filename
+
+        return path
 
     def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str, None]]:
         """
@@ -183,25 +188,24 @@ class AlphaVantageClient:
                     reports_key = "quarterlyReports" if "quarterlyReports" in data else "annualReports"
                     df = pd.DataFrame(data[reports_key])
 
-                elif endpoint_name == "INSIDER_TRANSACTIONS" and "data" in data:
-                    # Insider transactions
-                    df = pd.DataFrame(data["data"])
-
                 else:
                     # Fallback for other structures
                     df = pd.DataFrame.from_dict(data, orient="index").transpose()
 
             # Standardize datetime column
-            for col_name in ["timestamp", "fiscalDateEnding", "date"]:
+            for col_name in ["timestamp", "fiscalDateEnding", "date", "transactionDate"]:
                 if col_name in df.columns:
-                    df.rename(columns={col_name: "datetime"}, inplace=True)
+                    df.rename(columns={col_name: "dt"}, inplace=True)
                     break
             
-            if "datetime" in df.columns:
-                df["datetime"] = pd.to_datetime(df["datetime"])
-                df.set_index("datetime", inplace=True)
+            if "dt" in df.columns:
+                df["dt"] = pd.to_datetime(df["dt"])
+                df.set_index("dt", inplace=True)
             elif df.index.name in ["timestamp", "fiscalDateEnding", "date"]:
-                df.index.name = "datetime"
+                df.index.name = "dt"
+
+            if endpoint_name in SYMBOL_ENDPOINTS and "symbol" in params.keys():
+                df["symbol"] = params["symbol"]
 
         except Exception as e:
             self.logger.error(f"Error parsing data for {endpoint_name}: {e}")
@@ -214,8 +218,7 @@ class AlphaVantageClient:
         Fetches, parses, and caches data for a single endpoint call.
         """
         # Generate cache filename
-        filename = self._generate_filename(endpoint_name, params) + ".parquet"
-        filepath = self.data_dir / "files" / filename
+        filepath = self._generate_filepath(endpoint_name, params)
         
         # Return cached data if available and not forcing refresh
         if filepath.exists() and not force_refresh:
@@ -248,26 +251,23 @@ class AlphaVantageClient:
             self.logger.warning(f"No data to save for {endpoint_name} with params {params}")
             return
 
-        import duckdb
-        from utils import generate_create_table_statement
         table_name = endpoint_name.upper()
-        # Use schema from TABLE_SCHEMAS if available
-        from alpha_vantage_schema import TABLE_SCHEMAS
-        schema_dict = TABLE_SCHEMAS.get("CoreStockAPIs", {})
-        create_stmt = schema_dict.get(endpoint_name, None)
-        if not create_stmt:
-            # Fallback: generate from DataFrame
-            create_stmt = generate_create_table_statement(df, table_name)
-
+        
         try:
             conn = duckdb.connect(self.db_path)
-            conn.execute(create_stmt)
-            conn.register(table_name, df)
-            conn.execute(f"INSERT INTO {table_name} SELECT * FROM {table_name}")
+            
+            conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
+            
             conn.close()
             self.logger.info(f"Saved {len(df)} rows to {table_name}")
+
         except Exception as e:
-            self.logger.error(f"Error saving to database for {endpoint_name}: {e}")
+            match e:
+                case duckdb.CatalogException:
+                    conn = duckdb.connect(self.db_path)
+                    conn.execute(TABLE_SCHEMAS.get(endpoint_name))
+                case _:
+                    self.logger.error(f"Error saving to database for {endpoint_name}: {e}")
 
     def get_data(self, 
                  symbols: Optional[List[str]] = None,
@@ -303,7 +303,6 @@ class AlphaVantageClient:
                     params.update({"symbol": symbol})
                     df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
                     if not df.empty:
-                        df["symbol"] = symbol
                         all_dfs.append(df)
 
             # Process macro-economic endpoints
@@ -334,7 +333,9 @@ class AlphaVantageClient:
             self.logger.error(f"Error in get_data: {e}", exc_info=True)
             return pd.DataFrame()
 
-    def get_dataset_from_db(self, sql_query: str) -> pd.DataFrame:
+    def get_dataset_from_db(self,
+                            sql_query: str,
+                            conn: Optional[DuckDBPyConnection] = None) -> pd.DataFrame:
         """
         Execute SQL query against the database and return results as DataFrame.
         
@@ -345,7 +346,7 @@ class AlphaVantageClient:
             Query results as DataFrame
         """
         try:
-            conn = duckdb.connect(self.db_path)
+            conn = conn or duckdb.connect(self.db_path)
             df = conn.execute(sql_query).df()
             conn.close()
             return df

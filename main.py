@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from alpha_vantage import AlphaVantageClient
 import alpha_vantage_schema as avs
-from utils import generate_create_table_statement
 
 if __name__ == "__main__":
     load_dotenv()
@@ -16,7 +15,7 @@ if __name__ == "__main__":
     df = client.get_data(
         symbols=["GOOG"],
         endpoints=endpoints,
-        force_refresh=True
+        force_refresh=False
     )
 
     # Print the first few rows of the combined DataFrame
@@ -25,9 +24,3 @@ if __name__ == "__main__":
         print(df.head())
     else:
         print("Could not fetch any data.")
-
-    # 2. Generate the CREATE TABLE statement from the DataFrame
-    create_table_statement = generate_create_table_statement(df, 'users')
-
-    # 3. Print the result
-    print(create_table_statement)

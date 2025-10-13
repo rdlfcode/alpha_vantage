@@ -27,9 +27,7 @@ MACRO_ENDPOINTS = [
     "COTTON", "SUGAR", "COFFEE", "ALL_COMMODITIES",
     # Economic Indicators
     "REAL_GDP", "REAL_GDP_PER_CAPITA", "TREASURY_YIELD", "FEDERAL_FUNDS_RATE",
-    "CPI", "INFLATION", "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL",
-    # Market Status
-    "MARKET_STATUS"
+    "CPI", "INFLATION", "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL"
 ]
 
 PREMIUM_ENDPOINTS = [
@@ -39,14 +37,12 @@ PREMIUM_ENDPOINTS = [
 ]
 
 DEFAULT_ENDPOINTS = {
-    # == Symbol Endpoints ==
     "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "compact", "datatype": "csv"},
     "INSIDER_TRANSACTIONS": {"symbol": None},
     "INCOME_STATEMENT": {"symbol": None},
     "BALANCE_SHEET": {"symbol": None},
     "CASH_FLOW": {"symbol": None},
     "EARNINGS": {"symbol": None},
-    # == Macro Endpoints ==
     "WTI": {"interval": "daily", "datatype": "csv"},
     "BRENT": {"interval": "daily", "datatype": "csv"},
     "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
@@ -235,26 +231,27 @@ ALPHA_VANTAGE_SCHEMA = {
 }
 
 TABLE_SCHEMAS = {
-    "CoreStockAPIs": {
-        "TIME_SERIES_INTRADAY": """
-CREATE TABLE IF NOT EXISTS OHLCV_INTRADAY (
+    "TIME_SERIES_INTRADAY": """
+CREATE TABLE IF NOT EXISTS TIME_SERIES_INTRADAY (
     dt TIMESTAMP,
+    symbol TEXT,
     open DECIMAL(20, 4),
     high DECIMAL(20, 4),
     low DECIMAL(20, 4),
     close DECIMAL(20, 4),
     volume INT
 );""",
-        "TIME_SERIES_DAILY": """
-CREATE TABLE IF NOT EXISTS OHLCV_DAILY (
+    "TIME_SERIES_DAILY": """
+CREATE TABLE IF NOT EXISTS TIME_SERIES_DAILY (
     dt TIMESTAMP,
+    symbol TEXT,
     open DECIMAL(20, 4),
     high DECIMAL(20, 4),
     low DECIMAL(20, 4),
     close DECIMAL(20, 4),
     volume INT
 );""",
-        "GLOBAL_QUOTE": """
+    "GLOBAL_QUOTE": """
 CREATE TABLE IF NOT EXISTS GLOBAL_QUOTE (
     symbol TEXT,
     open DECIMAL(20, 4),
@@ -267,145 +264,143 @@ CREATE TABLE IF NOT EXISTS GLOBAL_QUOTE (
     change DECIMAL(20, 4),
     change_percent TEXT
 );""",
-        "INCOME_STATEMENT": """
+    "INCOME_STATEMENT": """
 CREATE TABLE IF NOT EXISTS INCOME_STATEMENT (
-    fiscalDateEnding TIMESTAMP,
-    reportedCurrency TEXT,
-    grossProfit INT,
-    totalRevenue INT,
-    operatingIncome INT,
-    netIncome INT
-);""",
-        "BALANCE_SHEET": """
-CREATE TABLE IF NOT EXISTS BALANCE_SHEET (
-    fiscalDateEnding TIMESTAMP,
-    reportedCurrency TEXT,
-    totalAssets INT,
-    totalLiabilities INT,
-    totalShareholderEquity INT
-);""",
-        "CASH_FLOW": """
-CREATE TABLE IF NOT EXISTS CASH_FLOW (
-    fiscalDateEnding TIMESTAMP,
-    reportedCurrency TEXT,
-    operatingCashflow INT,
-    cashflowFromInvestment INT,
-    cashflowFromFinancing INT
-);""",
-        "INSIDER_TRANSACTIONS": """
-CREATE TABLE IF NOT EXISTS INSIDER_TRANSACTIONS (
+    dt TIMESTAMP,
     symbol TEXT,
-    transactionDate TIMESTAMP,
+    "reportedCurrency" VARCHAR(32),
+    "grossProfit" BIGINT,
+    "totalRevenue" BIGINT,
+    "costOfRevenue" BIGINT,
+    "costofGoodsAndServicesSold" BIGINT,
+    "operatingIncome" BIGINT,
+    "sellingGeneralAndAdministrative" BIGINT,
+    "researchAndDevelopment" BIGINT,
+    "operatingExpenses" BIGINT,
+    "investmentIncomeNet" VARCHAR(32),
+    "netInterestIncome" DECIMAL(11, 1),
+    "interestIncome" DECIMAL(11, 1),
+    "interestExpense" DECIMAL(10, 1),
+    "nonInterestIncome" VARCHAR(32),
+    "otherNonOperatingIncome" DECIMAL(11, 1),
+    "depreciation" VARCHAR(32),
+    "depreciationAndAmortization" BIGINT,
+    "incomeBeforeTax" BIGINT,
+    "incomeTaxExpense" BIGINT,
+    "interestAndDebtExpense" VARCHAR(32),
+    "netIncomeFromContinuingOperations" DECIMAL(12, 1),
+    "comprehensiveIncomeNetOfTax" VARCHAR(32),
+    "ebit" BIGINT,
+    "ebitda" BIGINT,
+    "netIncome" BIGINT
+);""",
+    "BALANCE_SHEET": """
+CREATE TABLE IF NOT EXISTS BALANCE_SHEET (
+    dt TIMESTAMP,
+    symbol TEXT,
+    "reportedCurrency" VARCHAR(32),
+    "totalAssets" BIGINT,
+    "totalCurrentAssets" BIGINT,
+    "cashAndCashEquivalentsAtCarryingValue" BIGINT,
+    "cashAndShortTermInvestments" BIGINT,
+    "inventory" DECIMAL(11, 1),
+    "currentNetReceivables" BIGINT,
+    "totalNonCurrentAssets" BIGINT,
+    "propertyPlantEquipment" DECIMAL(13, 1),
+    "accumulatedDepreciationAmortizationPPE" VARCHAR(32),
+    "intangibleAssets" DECIMAL(11, 1),
+    "intangibleAssetsExcludingGoodwill" DECIMAL(11, 1),
+    "goodwill" DECIMAL(12, 1),
+    "investments" VARCHAR(32),
+    "longTermInvestments" DECIMAL(12, 1),
+    "shortTermInvestments" BIGINT,
+    "otherCurrentAssets" BIGINT,
+    "otherNonCurrentAssets" VARCHAR(32),
+    "totalLiabilities" BIGINT,
+    "totalCurrentLiabilities" BIGINT,
+    "currentAccountsPayable" BIGINT,
+    "deferredRevenue" VARCHAR(32),
+    "currentDebt" VARCHAR(32),
+    "shortTermDebt" DECIMAL(12, 1),
+    "totalNonCurrentLiabilities" BIGINT,
+    "capitalLeaseObligations" DECIMAL(12, 1),
+    "longTermDebt" DECIMAL(12, 1),
+    "currentLongTermDebt" DECIMAL(11, 1),
+    "longTermDebtNoncurrent" VARCHAR(32),
+    "shortLongTermDebtTotal" DECIMAL(12, 1),
+    "otherCurrentLiabilities" BIGINT,
+    "otherNonCurrentLiabilities" DECIMAL(12, 1),
+    "totalShareholderEquity" BIGINT,
+    "treasuryStock" DECIMAL(1, 1),
+    "retainedEarnings" BIGINT,
+    "commonStock" BIGINT,
+    "commonStockSharesOutstanding" BIGINT
+);""",
+    "CASH_FLOW": """
+CREATE TABLE CASH_FLOW (
+    dt TIMESTAMP,
+    symbol TEXT,
+    "reportedCurrency" VARCHAR(32),
+    "operatingCashflow" BIGINT,
+    "paymentsForOperatingActivities" VARCHAR(32),
+    "proceedsFromOperatingActivities" VARCHAR(32),
+    "changeInOperatingLiabilities" VARCHAR(32),
+    "changeInOperatingAssets" VARCHAR(32),
+    "depreciationDepletionAndAmortization" BIGINT,
+    "capitalExpenditures" BIGINT,
+    "changeInReceivables" DECIMAL(11, 1),
+    "changeInInventory" DECIMAL(11, 1),
+    "profitLoss" VARCHAR(32),
+    "cashflowFromInvestment" BIGINT,
+    "cashflowFromFinancing" BIGINT,
+    "proceedsFromRepaymentsOfShortTermDebt" VARCHAR(32),
+    "paymentsForRepurchaseOfCommonStock" VARCHAR(32),
+    "paymentsForRepurchaseOfEquity" VARCHAR(32),
+    "paymentsForRepurchaseOfPreferredStock" VARCHAR(32),
+    "dividendPayout" DECIMAL(11, 1),
+    "dividendPayoutCommonStock" DECIMAL(11, 1),
+    "dividendPayoutPreferredStock" VARCHAR(32),
+    "proceedsFromIssuanceOfCommonStock" VARCHAR(32),
+    "proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet" VARCHAR(32),
+    "proceedsFromIssuanceOfPreferredStock" VARCHAR(32),
+    "proceedsFromRepurchaseOfEquity" DECIMAL(12, 1),
+    "proceedsFromSaleOfTreasuryStock" VARCHAR(32),
+    "changeInCashAndCashEquivalents" DECIMAL(11, 1),
+    "changeInExchangeRate" DECIMAL(10, 1),
+    "netIncome" BIGINT
+);""",
+    "INSIDER_TRANSACTIONS": """
+CREATE TABLE IF NOT EXISTS INSIDER_TRANSACTIONS (
+    dt TIMESTAMP,
+    symbol TEXT,
     reportingPerson TEXT,
     transactionType TEXT,
     shares INT,
     price DECIMAL(20, 4)
 );""",
-        "WTI": """
-CREATE TABLE IF NOT EXISTS WTI (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
+    "MACRO": """
+CREATE TABLE IF NOT EXISTS MACRO (
+    dt TIMESTAMP,
+    wti DECIMAL(20, 4),
+    brent DECIMAL(20, 4),
+    natural_gas DECIMAL(20, 4),
+    copper DECIMAL(20, 4),
+    aluminum DECIMAL(20, 4),
+    wheat DECIMAL(20, 4),
+    corn DECIMAL(20, 4),
+    cotton DECIMAL(20, 4),
+    sugar DECIMAL(20, 4),
+    coffee DECIMAL(20, 4),
+    all_commodities DECIMAL(20, 4),
+    real_gdp DECIMAL(20, 4),
+    real_gdp_per_capita DECIMAL(20, 4),
+    treasury_yield DECIMAL(20, 4),
+    federal_funds_rate DECIMAL(20, 4),
+    cpi DECIMAL(20, 4),
+    inflation DECIMAL(20, 4),
+    retail_sales DECIMAL(20, 4),
+    durables DECIMAL(20, 4),
+    unemployment DECIMAL(20, 4),
+    nonfarm_payroll DECIMAL(20, 4)
 );""",
-        "BRENT": """
-CREATE TABLE IF NOT EXISTS BRENT (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "NATURAL_GAS": """
-CREATE TABLE IF NOT EXISTS NATURAL_GAS (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "COPPER": """
-CREATE TABLE IF NOT EXISTS COPPER (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "ALUMINUM": """
-CREATE TABLE IF NOT EXISTS ALUMINUM (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "WHEAT": """
-CREATE TABLE IF NOT EXISTS WHEAT (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "CORN": """
-CREATE TABLE IF NOT EXISTS CORN (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "COTTON": """
-CREATE TABLE IF NOT EXISTS COTTON (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "SUGAR": """
-CREATE TABLE IF NOT EXISTS SUGAR (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "COFFEE": """
-CREATE TABLE IF NOT EXISTS COFFEE (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "ALL_COMMODITIES": """
-CREATE TABLE IF NOT EXISTS ALL_COMMODITIES (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "REAL_GDP": """
-CREATE TABLE IF NOT EXISTS REAL_GDP (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "REAL_GDP_PER_CAPITA": """
-CREATE TABLE IF NOT EXISTS REAL_GDP_PER_CAPITA (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "TREASURY_YIELD": """
-CREATE TABLE IF NOT EXISTS TREASURY_YIELD (
-    date TIMESTAMP,
-    maturity TEXT,
-    yield DECIMAL(20, 4)
-);""",
-        "FEDERAL_FUNDS_RATE": """
-CREATE TABLE IF NOT EXISTS FEDERAL_FUNDS_RATE (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "CPI": """
-CREATE TABLE IF NOT EXISTS CPI (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "INFLATION": """
-CREATE TABLE IF NOT EXISTS INFLATION (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "RETAIL_SALES": """
-CREATE TABLE IF NOT EXISTS RETAIL_SALES (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "DURABLES": """
-CREATE TABLE IF NOT EXISTS DURABLES (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "UNEMPLOYMENT": """
-CREATE TABLE IF NOT EXISTS UNEMPLOYMENT (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-        "NONFARM_PAYROLL": """
-CREATE TABLE IF NOT EXISTS NONFARM_PAYROLL (
-    date TIMESTAMP,
-    value DECIMAL(20, 4)
-);""",
-    }
 }
