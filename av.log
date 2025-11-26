@@ -31,3 +31,5 @@ Did you mean "INCOME_STATEMENT"?
 2025-10-13 23:00:43,828 - alpha_vantage - WARNING - API returned an error or note for NONFARM_PAYROLL: {
     "Information": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage...
 2025-10-13 23:00:43,895 - alpha_vantage - INFO - Successfully built dataset with 87055 rows.
+2025-10-14 18:13:32,853 - alpha_vantage - INFO - Loading from cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
+2025-10-14 18:13:32,995 - alpha_vantage - INFO - Successfully built dataset with 100 rows.

@@ -167,7 +167,10 @@ class AlphaVantageClient:
                     if isinstance(time_series_data, dict):
                         df = pd.DataFrame.from_dict(time_series_data, orient="index")
                         df.index = pd.to_datetime(df.index)
+                        df.index.name = "dt"
                         df = df.apply(pd.to_numeric, errors="coerce")
+                        # Rename columns to remove "1. ", "2. ", etc.
+                        df.columns = [c.split(". ")[1] if ". " in c else c for c in df.columns]
 
                 elif any("data" in k.lower() for k in data.keys()):
                     # Economic indicators and commodities
@@ -252,16 +255,22 @@ class AlphaVantageClient:
         conn = conn or duckdb.connect(self.db_path)
         
         try:
-            conn.execute(f"INSERT INTO {table_name} SELECT * FROM df")
+            # Prepare dataframe for insertion
+            df_to_save = df.reset_index() if df.index.name == 'dt' else df
+            conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
             conn.close()
             self.logger.info(f"Saved {len(df)} rows to {table_name}")
 
         except Exception as e:
             match e:
                 # Table doesn't exist
-                case duckdb.CatalogException:
+                case _ if isinstance(e, duckdb.CatalogException):
                     conn = duckdb.connect(self.db_path)
                     conn.execute(TABLE_SCHEMAS.get(endpoint_name))
+                    # Retry insert
+                    conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
+                    conn.close()
+                    self.logger.info(f"Created table and saved {len(df)} rows to {table_name}")
                 case _:
                     self.logger.error(f"Error saving to database for {endpoint_name}: {e}")
 
