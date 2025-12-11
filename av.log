@@ -33,3 +33,219 @@ Did you mean "INCOME_STATEMENT"?
 2025-10-13 23:00:43,895 - alpha_vantage - INFO - Successfully built dataset with 87055 rows.
 2025-10-14 18:13:32,853 - alpha_vantage - INFO - Loading from cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
 2025-10-14 18:13:32,995 - alpha_vantage - INFO - Successfully built dataset with 100 rows.
+2025-12-07 15:45:10,177 - alpha_vantage - ERROR - Error in get_data: name 'avs' is not defined
+Traceback (most recent call last):
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 403, in get_data
+    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 264, in _fetch_and_cache_data
+    df = self._get_from_db(endpoint_name, params)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 224, in _get_from_db
+    if endpoint_name in avs.MACRO_ENDPOINTS:
+                        ^^^
+NameError: name 'avs' is not defined. Did you mean: 'abs'?
+2025-12-07 15:47:11,075 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'GOOG', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-07 15:47:11,785 - alpha_vantage - INFO - Saved to cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
+2025-12-07 15:47:11,785 - alpha_vantage - ERROR - Error saving to database for TIME_SERIES_DAILY: name 'avs' is not defined
+2025-12-07 15:47:11,785 - alpha_vantage - INFO - Fetching data for INSIDER_TRANSACTIONS with params: {'symbol': 'GOOG'}
+2025-12-07 15:47:12,658 - alpha_vantage - INFO - Saved to cache: data/files/INSIDER_TRANSACTIONS/symbol_GOOG.parquet
+2025-12-07 15:47:12,659 - alpha_vantage - ERROR - Error saving to database for INSIDER_TRANSACTIONS: name 'avs' is not defined
+2025-12-07 15:47:12,660 - alpha_vantage - INFO - Fetching data for INCOME_STATEMENT with params: {'symbol': 'GOOG'}
+2025-12-07 15:47:12,978 - alpha_vantage - INFO - Saved to cache: data/files/INCOME_STATEMENT/symbol_GOOG.parquet
+2025-12-07 15:47:12,979 - alpha_vantage - ERROR - Error saving to database for INCOME_STATEMENT: name 'avs' is not defined
+2025-12-07 15:47:12,979 - alpha_vantage - INFO - Fetching data for BALANCE_SHEET with params: {'symbol': 'GOOG'}
+2025-12-07 15:47:13,361 - alpha_vantage - INFO - Saved to cache: data/files/BALANCE_SHEET/symbol_GOOG.parquet
+2025-12-07 15:47:13,363 - alpha_vantage - ERROR - Error saving to database for BALANCE_SHEET: name 'avs' is not defined
+2025-12-07 15:47:13,364 - alpha_vantage - INFO - Fetching data for CASH_FLOW with params: {'symbol': 'GOOG'}
+2025-12-07 15:47:13,684 - alpha_vantage - INFO - Saved to cache: data/files/CASH_FLOW/symbol_GOOG.parquet
+2025-12-07 15:47:13,686 - alpha_vantage - ERROR - Error saving to database for CASH_FLOW: name 'avs' is not defined
+2025-12-07 15:47:13,686 - alpha_vantage - INFO - Fetching data for EARNINGS with params: {'symbol': 'GOOG'}
+2025-12-07 15:47:13,969 - alpha_vantage - INFO - Saved to cache: data/files/EARNINGS/symbol_GOOG.parquet
+2025-12-07 15:47:13,969 - alpha_vantage - ERROR - Error saving to database for EARNINGS: name 'avs' is not defined
+2025-12-07 15:47:13,969 - alpha_vantage - INFO - Fetching data for WTI with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:47:14,601 - alpha_vantage - INFO - Saved to cache: data/files/WTI/datatype_csv_interval_daily.parquet
+2025-12-07 15:47:14,601 - alpha_vantage - ERROR - Error saving to database for WTI: name 'avs' is not defined
+2025-12-07 15:47:14,601 - alpha_vantage - INFO - Fetching data for BRENT with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:47:15,270 - alpha_vantage - INFO - Saved to cache: data/files/BRENT/datatype_csv_interval_daily.parquet
+2025-12-07 15:47:15,270 - alpha_vantage - ERROR - Error saving to database for BRENT: name 'avs' is not defined
+2025-12-07 15:47:15,270 - alpha_vantage - INFO - Fetching data for NATURAL_GAS with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:47:15,900 - alpha_vantage - INFO - Saved to cache: data/files/NATURAL_GAS/datatype_csv_interval_daily.parquet
+2025-12-07 15:47:15,900 - alpha_vantage - ERROR - Error saving to database for NATURAL_GAS: name 'avs' is not defined
+2025-12-07 15:47:15,900 - alpha_vantage - INFO - Fetching data for COPPER with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:16,290 - alpha_vantage - INFO - Saved to cache: data/files/COPPER/datatype_csv_interval_monthly.parquet
+2025-12-07 15:47:16,291 - alpha_vantage - ERROR - Error saving to database for COPPER: name 'avs' is not defined
+2025-12-07 15:47:16,291 - alpha_vantage - INFO - Fetching data for ALUMINUM with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:16,553 - alpha_vantage - WARNING - API returned an error or note for ALUMINUM: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:16,557 - alpha_vantage - INFO - Fetching data for WHEAT with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:16,833 - alpha_vantage - WARNING - API returned an error or note for WHEAT: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:16,836 - alpha_vantage - INFO - Fetching data for CORN with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:17,110 - alpha_vantage - WARNING - API returned an error or note for CORN: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:17,113 - alpha_vantage - INFO - Fetching data for COTTON with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:17,392 - alpha_vantage - WARNING - API returned an error or note for COTTON: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:17,396 - alpha_vantage - INFO - Fetching data for SUGAR with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:17,673 - alpha_vantage - WARNING - API returned an error or note for SUGAR: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:17,677 - alpha_vantage - INFO - Fetching data for COFFEE with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:17,968 - alpha_vantage - WARNING - API returned an error or note for COFFEE: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:17,972 - alpha_vantage - INFO - Fetching data for ALL_COMMODITIES with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:18,245 - alpha_vantage - WARNING - API returned an error or note for ALL_COMMODITIES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:18,248 - alpha_vantage - INFO - Fetching data for REAL_GDP with params: {'interval': 'quarterly', 'datatype': 'csv'}
+2025-12-07 15:47:18,524 - alpha_vantage - WARNING - API returned an error or note for REAL_GDP: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:18,527 - alpha_vantage - INFO - Fetching data for REAL_GDP_PER_CAPITA with params: {'datatype': 'csv'}
+2025-12-07 15:47:18,796 - alpha_vantage - WARNING - API returned an error or note for REAL_GDP_PER_CAPITA: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:18,800 - alpha_vantage - INFO - Fetching data for TREASURY_YIELD with params: {'interval': 'daily', 'maturity': '3month', 'datatype': 'csv'}
+2025-12-07 15:47:19,097 - alpha_vantage - WARNING - API returned an error or note for TREASURY_YIELD: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:19,099 - alpha_vantage - INFO - Fetching data for FEDERAL_FUNDS_RATE with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:47:19,366 - alpha_vantage - WARNING - API returned an error or note for FEDERAL_FUNDS_RATE: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:19,367 - alpha_vantage - INFO - Fetching data for CPI with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:47:19,670 - alpha_vantage - WARNING - API returned an error or note for CPI: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:19,674 - alpha_vantage - INFO - Fetching data for INFLATION with params: {'datatype': 'csv'}
+2025-12-07 15:47:19,949 - alpha_vantage - WARNING - API returned an error or note for INFLATION: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:19,952 - alpha_vantage - INFO - Fetching data for RETAIL_SALES with params: {'datatype': 'csv'}
+2025-12-07 15:47:20,227 - alpha_vantage - WARNING - API returned an error or note for RETAIL_SALES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:20,231 - alpha_vantage - INFO - Fetching data for DURABLES with params: {'datatype': 'csv'}
+2025-12-07 15:47:20,508 - alpha_vantage - WARNING - API returned an error or note for DURABLES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:47:20,512 - rate_limiter - INFO - Daily request limit reached. Cannot make more requests today.
+2025-12-07 15:47:20,512 - alpha_vantage - ERROR - Error in get_data: Daily request limit reached.
+Traceback (most recent call last):
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 410, in get_data
+    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 270, in _fetch_and_cache_data
+    raw_data = self._fetch_data(endpoint_name, params)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 113, in _fetch_data
+    self.rate_limiter.wait_if_needed()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/roman/Projects/alpha_vantage/rate_limiter.py", line 32, in wait_if_needed
+    raise Exception("Daily request limit reached.")
+Exception: Daily request limit reached.
+2025-12-07 15:49:21,249 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'GOOG', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-07 15:49:21,657 - alpha_vantage - INFO - Saved to cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
+2025-12-07 15:49:21,671 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-07 15:49:21,671 - alpha_vantage - INFO - Fetching data for INSIDER_TRANSACTIONS with params: {'symbol': 'GOOG'}
+2025-12-07 15:49:22,540 - alpha_vantage - INFO - Saved to cache: data/files/INSIDER_TRANSACTIONS/symbol_GOOG.parquet
+2025-12-07 15:49:22,546 - alpha_vantage - ERROR - Error saving to database for INSIDER_TRANSACTIONS: Binder Error: Table "INSIDER_TRANSACTIONS" does not have a column with name "transaction_date"
+2025-12-07 15:49:22,547 - alpha_vantage - INFO - Fetching data for INCOME_STATEMENT with params: {'symbol': 'GOOG'}
+2025-12-07 15:49:22,867 - alpha_vantage - INFO - Saved to cache: data/files/INCOME_STATEMENT/symbol_GOOG.parquet
+2025-12-07 15:49:22,870 - alpha_vantage - ERROR - Error saving to database for INCOME_STATEMENT: Binder Error: Table "INCOME_STATEMENT" does not have a column with name "dt"
+2025-12-07 15:49:22,871 - alpha_vantage - INFO - Fetching data for BALANCE_SHEET with params: {'symbol': 'GOOG'}
+2025-12-07 15:49:23,254 - alpha_vantage - INFO - Saved to cache: data/files/BALANCE_SHEET/symbol_GOOG.parquet
+2025-12-07 15:49:23,257 - alpha_vantage - ERROR - Error saving to database for BALANCE_SHEET: Binder Error: Table "BALANCE_SHEET" does not have a column with name "totalCurrentAssets"
+2025-12-07 15:49:23,257 - alpha_vantage - INFO - Fetching data for CASH_FLOW with params: {'symbol': 'GOOG'}
+2025-12-07 15:49:23,582 - alpha_vantage - INFO - Saved to cache: data/files/CASH_FLOW/symbol_GOOG.parquet
+2025-12-07 15:49:23,586 - alpha_vantage - ERROR - Error saving to database for CASH_FLOW: Binder Error: Table "CASH_FLOW" does not have a column with name "paymentsForOperatingActivities"
+2025-12-07 15:49:23,587 - alpha_vantage - INFO - Fetching data for EARNINGS with params: {'symbol': 'GOOG'}
+2025-12-07 15:49:23,886 - alpha_vantage - INFO - Saved to cache: data/files/EARNINGS/symbol_GOOG.parquet
+2025-12-07 15:49:23,889 - alpha_vantage - INFO - Saved 1 rows to EARNINGS
+2025-12-07 15:49:23,890 - alpha_vantage - INFO - Fetching data for WTI with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:49:24,616 - alpha_vantage - INFO - Saved to cache: data/files/WTI/datatype_csv_interval_daily.parquet
+2025-12-07 15:49:24,623 - alpha_vantage - ERROR - Error saving to database for WTI: Conversion Error: Could not convert string "." to DECIMAL(20,4) when casting from source column wti
+2025-12-07 15:49:24,623 - alpha_vantage - INFO - Fetching data for BRENT with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:49:25,328 - alpha_vantage - INFO - Saved to cache: data/files/BRENT/datatype_csv_interval_daily.parquet
+2025-12-07 15:49:25,331 - alpha_vantage - ERROR - Error saving to database for BRENT: Conversion Error: Could not convert string "." to DECIMAL(20,4) when casting from source column brent
+2025-12-07 15:49:25,331 - alpha_vantage - INFO - Fetching data for NATURAL_GAS with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:49:25,970 - alpha_vantage - INFO - Saved to cache: data/files/NATURAL_GAS/datatype_csv_interval_daily.parquet
+2025-12-07 15:49:25,972 - alpha_vantage - ERROR - Error saving to database for NATURAL_GAS: Conversion Error: Could not convert string "." to DECIMAL(20,4) when casting from source column natural_gas
+2025-12-07 15:49:25,972 - alpha_vantage - INFO - Fetching data for COPPER with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:26,291 - alpha_vantage - INFO - Saved to cache: data/files/COPPER/datatype_csv_interval_monthly.parquet
+2025-12-07 15:49:26,296 - alpha_vantage - ERROR - Error saving to database for COPPER: Conversion Error: Could not convert string "." to DECIMAL(20,4) when casting from source column copper
+2025-12-07 15:49:26,296 - alpha_vantage - INFO - Fetching data for ALUMINUM with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:26,569 - alpha_vantage - WARNING - API returned an error or note for ALUMINUM: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:26,571 - alpha_vantage - INFO - Fetching data for WHEAT with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:26,857 - alpha_vantage - WARNING - API returned an error or note for WHEAT: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:26,861 - alpha_vantage - INFO - Fetching data for CORN with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:27,150 - alpha_vantage - WARNING - API returned an error or note for CORN: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:27,153 - alpha_vantage - INFO - Fetching data for COTTON with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:27,453 - alpha_vantage - WARNING - API returned an error or note for COTTON: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:27,455 - alpha_vantage - INFO - Fetching data for SUGAR with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:27,723 - alpha_vantage - WARNING - API returned an error or note for SUGAR: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:27,727 - alpha_vantage - INFO - Fetching data for COFFEE with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:27,995 - alpha_vantage - WARNING - API returned an error or note for COFFEE: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:27,997 - alpha_vantage - INFO - Fetching data for ALL_COMMODITIES with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:28,269 - alpha_vantage - WARNING - API returned an error or note for ALL_COMMODITIES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:28,270 - alpha_vantage - INFO - Fetching data for REAL_GDP with params: {'interval': 'quarterly', 'datatype': 'csv'}
+2025-12-07 15:49:28,534 - alpha_vantage - WARNING - API returned an error or note for REAL_GDP: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:28,535 - alpha_vantage - INFO - Fetching data for REAL_GDP_PER_CAPITA with params: {'datatype': 'csv'}
+2025-12-07 15:49:28,827 - alpha_vantage - WARNING - API returned an error or note for REAL_GDP_PER_CAPITA: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:28,830 - alpha_vantage - INFO - Fetching data for TREASURY_YIELD with params: {'interval': 'daily', 'maturity': '3month', 'datatype': 'csv'}
+2025-12-07 15:49:29,110 - alpha_vantage - WARNING - API returned an error or note for TREASURY_YIELD: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:29,113 - alpha_vantage - INFO - Fetching data for FEDERAL_FUNDS_RATE with params: {'interval': 'daily', 'datatype': 'csv'}
+2025-12-07 15:49:29,406 - alpha_vantage - WARNING - API returned an error or note for FEDERAL_FUNDS_RATE: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:29,407 - alpha_vantage - INFO - Fetching data for CPI with params: {'interval': 'monthly', 'datatype': 'csv'}
+2025-12-07 15:49:29,736 - alpha_vantage - WARNING - API returned an error or note for CPI: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:29,739 - alpha_vantage - INFO - Fetching data for INFLATION with params: {'datatype': 'csv'}
+2025-12-07 15:49:30,024 - alpha_vantage - WARNING - API returned an error or note for INFLATION: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:30,026 - alpha_vantage - INFO - Fetching data for RETAIL_SALES with params: {'datatype': 'csv'}
+2025-12-07 15:49:30,328 - alpha_vantage - WARNING - API returned an error or note for RETAIL_SALES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:30,332 - alpha_vantage - INFO - Fetching data for DURABLES with params: {'datatype': 'csv'}
+2025-12-07 15:49:30,624 - alpha_vantage - WARNING - API returned an error or note for DURABLES: {
+    "Note": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please visit https://www.alphavantage.co/premium/ if you would like to target a...
+2025-12-07 15:49:30,626 - rate_limiter - INFO - Daily request limit reached. Cannot make more requests today.
+2025-12-07 15:49:30,626 - alpha_vantage - ERROR - Error in get_data: Daily request limit reached.
+Traceback (most recent call last):
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 479, in get_data
+    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 303, in _fetch_and_cache_data
+    raw_data = self._fetch_data(endpoint_name, params)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 127, in _fetch_data
+    self.rate_limiter.wait_if_needed()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/roman/Projects/alpha_vantage/rate_limiter.py", line 32, in wait_if_needed
+    raise Exception("Daily request limit reached.")
+Exception: Daily request limit reached.
+2025-12-07 15:52:45,046 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-07 15:52:45,159 - alpha_vantage - INFO - Loading from cache: data/files/INSIDER_TRANSACTIONS/symbol_GOOG.parquet
+2025-12-07 15:52:45,168 - alpha_vantage - INFO - Loading from cache: data/files/INCOME_STATEMENT/symbol_GOOG.parquet
+2025-12-07 15:52:45,170 - alpha_vantage - INFO - Loading from cache: data/files/BALANCE_SHEET/symbol_GOOG.parquet
+2025-12-07 15:52:45,172 - alpha_vantage - INFO - Loading from cache: data/files/CASH_FLOW/symbol_GOOG.parquet
+2025-12-07 15:52:45,174 - alpha_vantage - INFO - Loading from cache: data/files/EARNINGS/symbol_GOOG.parquet
+2025-12-07 15:52:45,176 - alpha_vantage - INFO - Loading from cache: data/files/WTI/datatype_csv_interval_daily.parquet
+2025-12-07 15:52:45,178 - alpha_vantage - INFO - Loading from cache: data/files/BRENT/datatype_csv_interval_daily.parquet
+2025-12-07 15:52:45,179 - alpha_vantage - INFO - Loading from cache: data/files/NATURAL_GAS/datatype_csv_interval_daily.parquet
+2025-12-07 15:52:45,180 - alpha_vantage - INFO - Loading from cache: data/files/COPPER/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,181 - alpha_vantage - INFO - Loading from cache: data/files/ALUMINUM/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,182 - alpha_vantage - INFO - Loading from cache: data/files/WHEAT/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,183 - alpha_vantage - INFO - Loading from cache: data/files/CORN/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,184 - alpha_vantage - INFO - Loading from cache: data/files/COTTON/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,185 - alpha_vantage - INFO - Loading from cache: data/files/SUGAR/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,186 - alpha_vantage - INFO - Loading from cache: data/files/COFFEE/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,187 - alpha_vantage - INFO - Loading from cache: data/files/ALL_COMMODITIES/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,188 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP/datatype_csv_interval_quarterly.parquet
+2025-12-07 15:52:45,189 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP_PER_CAPITA/datatype_csv.parquet
+2025-12-07 15:52:45,190 - alpha_vantage - INFO - Loading from cache: data/files/TREASURY_YIELD/datatype_csv_interval_daily_maturity_3month.parquet
+2025-12-07 15:52:45,191 - alpha_vantage - INFO - Loading from cache: data/files/FEDERAL_FUNDS_RATE/datatype_csv_interval_daily.parquet
+2025-12-07 15:52:45,193 - alpha_vantage - INFO - Loading from cache: data/files/CPI/datatype_csv_interval_monthly.parquet
+2025-12-07 15:52:45,193 - alpha_vantage - INFO - Loading from cache: data/files/INFLATION/datatype_csv.parquet
+2025-12-07 15:52:45,194 - alpha_vantage - INFO - Loading from cache: data/files/RETAIL_SALES/datatype_csv.parquet
+2025-12-07 15:52:45,195 - alpha_vantage - INFO - Loading from cache: data/files/DURABLES/datatype_csv.parquet
+2025-12-07 15:52:45,196 - alpha_vantage - INFO - Loading from cache: data/files/UNEMPLOYMENT/datatype_csv.parquet
+2025-12-07 15:52:45,196 - alpha_vantage - INFO - Fetching data for NONFARM_PAYROLL with params: {'datatype': 'csv'}
+2025-12-07 15:52:45,589 - alpha_vantage - INFO - Saved to cache: data/files/NONFARM_PAYROLL/datatype_csv.parquet
+2025-12-07 15:52:45,594 - alpha_vantage - INFO - Saved 1041 rows to MACRO
+2025-12-07 15:52:45,666 - alpha_vantage - INFO - Successfully built dataset with 88302 rows.
