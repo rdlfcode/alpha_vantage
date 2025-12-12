@@ -7,29 +7,6 @@ It serves as the single source of truth for API endpoints and their parameters.
 
 BASE_URL = "https://www.alphavantage.co/query"
 
-SYMBOL_ENDPOINTS = [
-   # Core Time Series
-   "TIME_SERIES_INTRADAY", "TIME_SERIES_DAILY", "TIME_SERIES_DAILY_ADJUSTED",
-   "TIME_SERIES_WEEKLY", "TIME_SERIES_WEEKLY_ADJUSTED", "TIME_SERIES_MONTHLY",
-   "TIME_SERIES_MONTHLY_ADJUSTED", "GLOBAL_QUOTE",
-   # Fundamental Data
-   "OVERVIEW", "INCOME_STATEMENT", "BALANCE_SHEET", "CASH_FLOW", "EARNINGS",
-   "LISTING_STATUS", "EARNINGS_CALENDAR", "IPO_CALENDAR",
-   # Alpha Intelligence
-   "NEWS_SENTIMENT", "INSIDER_TRANSACTIONS",
-   # Technical Indicators (a selection, as most are generic)
-   "SMA", "EMA", "VWAP", "MACD", "RSI", "BBANDS"
-]
-
-MACRO_ENDPOINTS = [
-   # Commodities
-   "WTI", "BRENT", "NATURAL_GAS", "COPPER", "ALUMINUM", "WHEAT", "CORN",
-   "COTTON", "SUGAR", "COFFEE", "ALL_COMMODITIES",
-   # Economic Indicators
-   "REAL_GDP", "REAL_GDP_PER_CAPITA", "TREASURY_YIELD", "FEDERAL_FUNDS_RATE",
-   "CPI", "INFLATION", "RETAIL_SALES", "DURABLES", "UNEMPLOYMENT", "NONFARM_PAYROLL"
-]
-
 PREMIUM_ENDPOINTS = [
    "TIME_SERIES_DAILY_ADJUSTED", "REALTIME_BULK_QUOTES", "REALTIME_OPTIONS",
    "FX_INTRADAY", "CRYPTO_INTRADAY", "ANALYTICS_FIXED_WINDOW",
@@ -229,6 +206,10 @@ ALPHA_VANTAGE_SCHEMA = {
    "HT_DCPHASE": {"function": "HT_DCPHASE", "symbol": "string", "interval": ["1min", "5min", "15min", "30min", "60min", "daily", "weekly", "monthly"], "series_type": ["close", "open", "high", "low"], "datatype": ["csv", "json"]},
    "HT_PHASOR": {"function": "HT_PHASOR", "symbol": "string", "interval": ["1min", "5min", "15min", "30min", "60min", "daily", "weekly", "monthly"], "series_type": ["close", "open", "high", "low"], "datatype": ["csv", "json"]},
 }
+
+SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v]
+
+MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
 
 TABLE_SCHEMAS = {
    "TIME_SERIES_INTRADAY": """

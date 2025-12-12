@@ -1,38 +1,3 @@
-2025-10-13 23:00:36,467 - alpha_vantage - INFO - Loading from cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
-2025-10-13 23:00:43,123 - alpha_vantage - INFO - Loading from cache: data/files/INSIDER_TRANSACTIONS/symbol_GOOG.parquet
-2025-10-13 23:00:43,125 - alpha_vantage - INFO - Loading from cache: data/files/INCOME_STATEMENT/symbol_GOOG.parquet
-2025-10-13 23:00:43,129 - alpha_vantage - INFO - Loading from cache: data/files/BALANCE_SHEET/symbol_GOOG.parquet
-2025-10-13 23:00:43,132 - alpha_vantage - INFO - Loading from cache: data/files/CASH_FLOW/symbol_GOOG.parquet
-2025-10-13 23:00:43,135 - alpha_vantage - INFO - Loading from cache: data/files/EARNINGS/symbol_GOOG.parquet
-2025-10-13 23:00:43,136 - alpha_vantage - INFO - Loading from cache: data/files/WTI/datatype_csv_interval_daily.parquet
-2025-10-13 23:00:43,137 - alpha_vantage - INFO - Loading from cache: data/files/BRENT/datatype_csv_interval_daily.parquet
-2025-10-13 23:00:43,139 - alpha_vantage - INFO - Loading from cache: data/files/NATURAL_GAS/datatype_csv_interval_daily.parquet
-2025-10-13 23:00:43,140 - alpha_vantage - INFO - Loading from cache: data/files/COPPER/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,141 - alpha_vantage - INFO - Loading from cache: data/files/ALUMINUM/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,142 - alpha_vantage - INFO - Loading from cache: data/files/WHEAT/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,142 - alpha_vantage - INFO - Loading from cache: data/files/CORN/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,143 - alpha_vantage - INFO - Loading from cache: data/files/COTTON/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,144 - alpha_vantage - INFO - Loading from cache: data/files/SUGAR/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,145 - alpha_vantage - INFO - Loading from cache: data/files/COFFEE/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,145 - alpha_vantage - INFO - Loading from cache: data/files/ALL_COMMODITIES/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,146 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP/datatype_csv_interval_quarterly.parquet
-2025-10-13 23:00:43,147 - alpha_vantage - INFO - Loading from cache: data/files/REAL_GDP_PER_CAPITA/datatype_csv.parquet
-2025-10-13 23:00:43,147 - alpha_vantage - INFO - Loading from cache: data/files/TREASURY_YIELD/datatype_csv_interval_daily_maturity_3month.parquet
-2025-10-13 23:00:43,148 - alpha_vantage - INFO - Loading from cache: data/files/FEDERAL_FUNDS_RATE/datatype_csv_interval_daily.parquet
-2025-10-13 23:00:43,149 - alpha_vantage - INFO - Loading from cache: data/files/CPI/datatype_csv_interval_monthly.parquet
-2025-10-13 23:00:43,150 - alpha_vantage - INFO - Loading from cache: data/files/INFLATION/datatype_csv.parquet
-2025-10-13 23:00:43,151 - alpha_vantage - INFO - Loading from cache: data/files/RETAIL_SALES/datatype_csv.parquet
-2025-10-13 23:00:43,151 - alpha_vantage - INFO - Loading from cache: data/files/DURABLES/datatype_csv.parquet
-2025-10-13 23:00:43,152 - alpha_vantage - INFO - Fetching data for UNEMPLOYMENT with params: {'datatype': 'csv'}
-2025-10-13 23:00:43,523 - alpha_vantage - INFO - Saved to cache: data/files/UNEMPLOYMENT/datatype_csv.parquet
-2025-10-13 23:00:43,595 - alpha_vantage - ERROR - Error saving to database for UNEMPLOYMENT: Catalog Error: Table with name UNEMPLOYMENT does not exist!
-Did you mean "INCOME_STATEMENT"?
-2025-10-13 23:00:43,596 - alpha_vantage - INFO - Fetching data for NONFARM_PAYROLL with params: {'datatype': 'csv'}
-2025-10-13 23:00:43,828 - alpha_vantage - WARNING - API returned an error or note for NONFARM_PAYROLL: {
-    "Information": "We have detected your API key as R5AYPFDI3RC4ZCSD and our standard API rate limit is 25 requests per day. Please subscribe to any of the premium plans at https://www.alphavantage...
-2025-10-13 23:00:43,895 - alpha_vantage - INFO - Successfully built dataset with 87055 rows.
-2025-10-14 18:13:32,853 - alpha_vantage - INFO - Loading from cache: data/files/TIME_SERIES_DAILY/symbol_GOOG_datatype_csv_outputsize_compact.parquet
-2025-10-14 18:13:32,995 - alpha_vantage - INFO - Successfully built dataset with 100 rows.
 2025-12-07 15:45:10,177 - alpha_vantage - ERROR - Error in get_data: name 'avs' is not defined
 Traceback (most recent call last):
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 403, in get_data
@@ -249,3 +214,482 @@ Exception: Daily request limit reached.
 2025-12-07 15:52:45,589 - alpha_vantage - INFO - Saved to cache: data/files/NONFARM_PAYROLL/datatype_csv.parquet
 2025-12-07 15:52:45,594 - alpha_vantage - INFO - Saved 1041 rows to MACRO
 2025-12-07 15:52:45,666 - alpha_vantage - INFO - Successfully built dataset with 88302 rows.
+2025-12-12 00:13:54,131 - __main__ - INFO - Starting data consumption script...
+2025-12-12 00:13:54,145 - utils - INFO - Read 505 stock symbols from stocks.txt
+2025-12-12 00:13:54,145 - __main__ - INFO - Loaded 505 symbols: ['MMM', 'AOS', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADM', 'ADBE', 'AAP', 'AMD', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT', 'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'APA', 'AAPL', 'AMAT', 'APTV', 'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B', 'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW', 'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY', 'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX', 'CME', 'CMS', 'KO', 'CTSH', 'CL', 'CMCSA', 'CMA', 'CAG', 'COP', 'ED', 'STZ', 'CPRT', 'GLW', 'CTVA', 'COST', 'CTRA', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA', 'DE', 'DAL', 'XRAY', 'DVN', 'DXCM', 'FANG', 'DLR', 'DFS', 'DISCA', 'DISCK', 'DISH', 'DG', 'DLTR', 'D', 'DPZ', 'DOV', 'DOW', 'DTE', 'DUK', 'DRE', 'DD', 'DXC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA', 'LLY', 'EMR', 'ENPH', 'ETR', 'EOG', 'EFX', 'EQIX', 'EQR', 'ESS', 'EL', 'ETSY', 'RE', 'EVRG', 'ES', 'EXC', 'EXPE', 'EXPD', 'EXR', 'XOM', 'FFIV', 'FB', 'FAST', 'FRT', 'FDX', 'FIS', 'FITB', 'FRC', 'FE', 'FISV', 'FLT', 'FMC', 'F', 'FTNT', 'FTV', 'FBHS', 'FOXA', 'FOX', 'BEN', 'FCX', 'GPS', 'GRMN', 'IT', 'GNRC', 'GD', 'GE', 'GIS', 'GM', 'GPC', 'GILD', 'GPN', 'GL', 'GS', 'HAL', 'HBI', 'HAS', 'HCA', 'PEAK', 'HSIC', 'HES', 'HPE', 'HLT', 'HOLX', 'HD', 'HON', 'HRL', 'HST', 'HWM', 'HPQ', 'HUM', 'HBAN', 'HII', 'IBM', 'IEX', 'IDXX', 'INFO', 'ITW', 'ILMN', 'INCY', 'IR', 'INTC', 'ICE', 'IFF', 'IP', 'IPG', 'INTU', 'ISRG', 'IVZ', 'IPGP', 'IQV', 'IRM', 'JBHT', 'JKHY', 'J', 'SJM', 'JNJ', 'JCI', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'KEYS', 'KMB', 'KIM', 'KMI', 'KLAC', 'KHC', 'KR', 'LHX', 'LH', 'LRCX', 'LW', 'LVS', 'LEG', 'LDOS', 'LEN', 'LNC', 'LIN', 'LYV', 'LKQ', 'LMT', 'L', 'LOW', 'LUMN', 'LYB', 'MTB', 'MRO', 'MPC', 'MKTX', 'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MTCH', 'MKC', 'MCD', 'MCK', 'MDT', 'MRK', 'MET', 'MTD', 'MGM', 'MCHP', 'MU', 'MSFT', 'MAA', 'MRNA', 'MHK', 'TAP', 'MDLZ', 'MPWR', 'MNST', 'MCO', 'MS', 'MSI', 'MSCI', 'NDAQ', 'NTAP', 'NFLX', 'NWL', 'NEM', 'NWSA', 'NWS', 'NEE', 'NLSN', 'NKE', 'NI', 'NSC', 'NTRS', 'NOC', 'NLOK', 'NCLH', 'NRG', 'NUE', 'NVDA', 'NVR', 'NXPI', 'ORLY', 'OXY', 'ODFL', 'OMC', 'OKE', 'ORCL', 'OGN', 'OTIS', 'PCAR', 'PKG', 'PH', 'PAYX', 'PAYC', 'PYPL', 'PENN', 'PNR', 'PBCT', 'PEP', 'PKI', 'PFE', 'PM', 'PSX', 'PNW', 'PXD', 'PNC', 'POOL', 'PPG', 'PPL', 'PFG', 'PG', 'PGR', 'PLD', 'PRU', 'PTC', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'QCOM', 'PWR', 'DGX', 'RL', 'RJF', 'RTX', 'O', 'REG', 'REGN', 'RF', 'RSG', 'RMD', 'RHI', 'ROK', 'ROL', 'ROP', 'ROST', 'RCL', 'SPGI', 'CRM', 'SBAC', 'SLB', 'STX', 'SEE', 'SRE', 'NOW', 'SHW', 'SPG', 'SWKS', 'SNA', 'SO', 'LUV', 'SWK', 'SBUX', 'STT', 'STE', 'SYK', 'SIVB', 'SYF', 'SNPS', 'SYY', 'TMUS', 'TROW', 'TTWO', 'TPR', 'TGT', 'TEL', 'TDY', 'TFX', 'TER', 'TSLA', 'TXN', 'TXT', 'COO', 'HIG', 'HSY', 'MOS', 'TRV', 'DIS', 'TMO', 'TJX', 'TSCO', 'TT', 'TDG', 'TRMB', 'TFC', 'TWTR', 'TYL', 'TSN', 'USB', 'UDR', 'ULTA', 'UAA', 'UA', 'UNP', 'UAL', 'UPS', 'URI', 'UNH', 'UHS', 'VLO', 'VTR', 'VRSN', 'VRSK', 'VZ', 'VRTX', 'VFC', 'VIAC', 'VTRS', 'V', 'VNO', 'VMC', 'WRB', 'GWW', 'WAB', 'WBA', 'WMT', 'WM', 'WAT', 'WEC', 'WFC', 'WELL', 'WST', 'WDC', 'WU', 'WRK', 'WY', 'WHR', 'WMB', 'WLTW', 'WYNN', 'XEL', 'XLNX', 'XYL', 'YUM', 'ZBRA', 'ZBH', 'ZION', 'ZTS']
+2025-12-12 00:13:54,146 - __main__ - INFO - Generated 3051 tasks.
+2025-12-12 00:13:54,146 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MMM)
+2025-12-12 00:13:54,148 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'MMM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:54,471 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:13:54,476 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:13:54,476 - __main__ - INFO - Success: TIME_SERIES_DAILY (MMM) - 100 rows
+2025-12-12 00:13:54,476 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AOS)
+2025-12-12 00:13:54,477 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:54,668 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:54,669 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AOS)
+2025-12-12 00:13:54,670 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABT)
+2025-12-12 00:13:54,672 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABT', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:54,836 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:54,838 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABT)
+2025-12-12 00:13:54,838 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABBV)
+2025-12-12 00:13:54,839 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABBV', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,021 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:55,029 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABBV)
+2025-12-12 00:13:55,030 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABMD)
+2025-12-12 00:13:55,035 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,219 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:55,220 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABMD)
+2025-12-12 00:13:55,220 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ACN)
+2025-12-12 00:13:55,222 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ACN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,384 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:55,390 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ACN)
+2025-12-12 00:13:55,391 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ATVI)
+2025-12-12 00:13:55,395 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ATVI', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,613 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:13:55,616 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:13:55,617 - __main__ - INFO - Success: TIME_SERIES_DAILY (ATVI) - 100 rows
+2025-12-12 00:13:55,617 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADM)
+2025-12-12 00:13:55,618 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,808 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:55,809 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ADM)
+2025-12-12 00:13:55,809 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADBE)
+2025-12-12 00:13:55,811 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADBE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:55,972 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:55,973 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ADBE)
+2025-12-12 00:13:55,973 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AAP)
+2025-12-12 00:13:55,974 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AAP', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:56,218 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:56,219 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AAP)
+2025-12-12 00:13:56,220 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMD)
+2025-12-12 00:13:56,222 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:56,395 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:56,396 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AMD)
+2025-12-12 00:13:56,396 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AES)
+2025-12-12 00:13:56,397 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AES', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:56,572 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:56,573 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AES)
+2025-12-12 00:13:56,573 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AFL)
+2025-12-12 00:13:56,574 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AFL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:56,822 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:13:56,829 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:13:56,829 - __main__ - INFO - Success: TIME_SERIES_DAILY (AFL) - 100 rows
+2025-12-12 00:13:56,829 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (A)
+2025-12-12 00:13:56,833 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'A', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,002 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:57,003 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (A)
+2025-12-12 00:13:57,004 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (APD)
+2025-12-12 00:13:57,006 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'APD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,175 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:57,176 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (APD)
+2025-12-12 00:13:57,176 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AKAM)
+2025-12-12 00:13:57,181 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AKAM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,355 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:57,357 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AKAM)
+2025-12-12 00:13:57,357 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALK)
+2025-12-12 00:13:57,358 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALK', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,531 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:57,536 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALK)
+2025-12-12 00:13:57,536 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALB)
+2025-12-12 00:13:57,538 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALB', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,707 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:57,708 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALB)
+2025-12-12 00:13:57,708 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ARE)
+2025-12-12 00:13:57,709 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ARE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:57,965 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:13:57,969 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:13:57,969 - __main__ - INFO - Success: TIME_SERIES_DAILY (ARE) - 100 rows
+2025-12-12 00:13:57,969 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALGN)
+2025-12-12 00:13:57,971 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALGN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:58,117 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:58,118 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALGN)
+2025-12-12 00:13:58,118 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALLE)
+2025-12-12 00:13:58,119 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALLE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:58,304 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:58,307 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALLE)
+2025-12-12 00:13:58,307 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (LNT)
+2025-12-12 00:13:58,308 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'LNT', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:58,476 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:58,477 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (LNT)
+2025-12-12 00:13:58,477 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALL)
+2025-12-12 00:13:58,479 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:58,696 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:58,702 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALL)
+2025-12-12 00:13:58,703 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (GOOGL)
+2025-12-12 00:13:58,705 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'GOOGL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:58,887 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:13:58,889 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (GOOGL)
+2025-12-12 00:13:58,889 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (GOOG)
+2025-12-12 00:13:58,895 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:13:58,896 - __main__ - INFO - Success: TIME_SERIES_DAILY (GOOG) - 100 rows
+2025-12-12 00:13:58,896 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MO)
+2025-12-12 00:13:58,899 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'MO', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:13:59,140 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:13:59,143 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:13:59,143 - __main__ - INFO - Success: TIME_SERIES_DAILY (MO) - 100 rows
+2025-12-12 00:13:59,143 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMZN)
+2025-12-12 00:13:59,144 - rate_limiter - INFO - Daily request limit reached. Cannot make more requests today.
+2025-12-12 00:13:59,144 - __main__ - WARNING - Daily limit hit while processing TIME_SERIES_DAILY (AMZN).
+2025-12-12 00:13:59,144 - __main__ - INFO - Sleeping for 86455 seconds (24.02 hours) until rate limit resets.
+2025-12-12 00:16:41,399 - __main__ - INFO - Starting data consumption script...
+2025-12-12 00:16:41,412 - utils - INFO - Read 505 stock symbols from stocks.txt
+2025-12-12 00:16:41,412 - __main__ - INFO - Loaded 505 symbols: ['MMM', 'AOS', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADM', 'ADBE', 'AAP', 'AMD', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT', 'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'APA', 'AAPL', 'AMAT', 'APTV', 'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B', 'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW', 'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY', 'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX', 'CME', 'CMS', 'KO', 'CTSH', 'CL', 'CMCSA', 'CMA', 'CAG', 'COP', 'ED', 'STZ', 'CPRT', 'GLW', 'CTVA', 'COST', 'CTRA', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA', 'DE', 'DAL', 'XRAY', 'DVN', 'DXCM', 'FANG', 'DLR', 'DFS', 'DISCA', 'DISCK', 'DISH', 'DG', 'DLTR', 'D', 'DPZ', 'DOV', 'DOW', 'DTE', 'DUK', 'DRE', 'DD', 'DXC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA', 'LLY', 'EMR', 'ENPH', 'ETR', 'EOG', 'EFX', 'EQIX', 'EQR', 'ESS', 'EL', 'ETSY', 'RE', 'EVRG', 'ES', 'EXC', 'EXPE', 'EXPD', 'EXR', 'XOM', 'FFIV', 'FB', 'FAST', 'FRT', 'FDX', 'FIS', 'FITB', 'FRC', 'FE', 'FISV', 'FLT', 'FMC', 'F', 'FTNT', 'FTV', 'FBHS', 'FOXA', 'FOX', 'BEN', 'FCX', 'GPS', 'GRMN', 'IT', 'GNRC', 'GD', 'GE', 'GIS', 'GM', 'GPC', 'GILD', 'GPN', 'GL', 'GS', 'HAL', 'HBI', 'HAS', 'HCA', 'PEAK', 'HSIC', 'HES', 'HPE', 'HLT', 'HOLX', 'HD', 'HON', 'HRL', 'HST', 'HWM', 'HPQ', 'HUM', 'HBAN', 'HII', 'IBM', 'IEX', 'IDXX', 'INFO', 'ITW', 'ILMN', 'INCY', 'IR', 'INTC', 'ICE', 'IFF', 'IP', 'IPG', 'INTU', 'ISRG', 'IVZ', 'IPGP', 'IQV', 'IRM', 'JBHT', 'JKHY', 'J', 'SJM', 'JNJ', 'JCI', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'KEYS', 'KMB', 'KIM', 'KMI', 'KLAC', 'KHC', 'KR', 'LHX', 'LH', 'LRCX', 'LW', 'LVS', 'LEG', 'LDOS', 'LEN', 'LNC', 'LIN', 'LYV', 'LKQ', 'LMT', 'L', 'LOW', 'LUMN', 'LYB', 'MTB', 'MRO', 'MPC', 'MKTX', 'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MTCH', 'MKC', 'MCD', 'MCK', 'MDT', 'MRK', 'MET', 'MTD', 'MGM', 'MCHP', 'MU', 'MSFT', 'MAA', 'MRNA', 'MHK', 'TAP', 'MDLZ', 'MPWR', 'MNST', 'MCO', 'MS', 'MSI', 'MSCI', 'NDAQ', 'NTAP', 'NFLX', 'NWL', 'NEM', 'NWSA', 'NWS', 'NEE', 'NLSN', 'NKE', 'NI', 'NSC', 'NTRS', 'NOC', 'NLOK', 'NCLH', 'NRG', 'NUE', 'NVDA', 'NVR', 'NXPI', 'ORLY', 'OXY', 'ODFL', 'OMC', 'OKE', 'ORCL', 'OGN', 'OTIS', 'PCAR', 'PKG', 'PH', 'PAYX', 'PAYC', 'PYPL', 'PENN', 'PNR', 'PBCT', 'PEP', 'PKI', 'PFE', 'PM', 'PSX', 'PNW', 'PXD', 'PNC', 'POOL', 'PPG', 'PPL', 'PFG', 'PG', 'PGR', 'PLD', 'PRU', 'PTC', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'QCOM', 'PWR', 'DGX', 'RL', 'RJF', 'RTX', 'O', 'REG', 'REGN', 'RF', 'RSG', 'RMD', 'RHI', 'ROK', 'ROL', 'ROP', 'ROST', 'RCL', 'SPGI', 'CRM', 'SBAC', 'SLB', 'STX', 'SEE', 'SRE', 'NOW', 'SHW', 'SPG', 'SWKS', 'SNA', 'SO', 'LUV', 'SWK', 'SBUX', 'STT', 'STE', 'SYK', 'SIVB', 'SYF', 'SNPS', 'SYY', 'TMUS', 'TROW', 'TTWO', 'TPR', 'TGT', 'TEL', 'TDY', 'TFX', 'TER', 'TSLA', 'TXN', 'TXT', 'COO', 'HIG', 'HSY', 'MOS', 'TRV', 'DIS', 'TMO', 'TJX', 'TSCO', 'TT', 'TDG', 'TRMB', 'TFC', 'TWTR', 'TYL', 'TSN', 'USB', 'UDR', 'ULTA', 'UAA', 'UA', 'UNP', 'UAL', 'UPS', 'URI', 'UNH', 'UHS', 'VLO', 'VTR', 'VRSN', 'VRSK', 'VZ', 'VRTX', 'VFC', 'VIAC', 'VTRS', 'V', 'VNO', 'VMC', 'WRB', 'GWW', 'WAB', 'WBA', 'WMT', 'WM', 'WAT', 'WEC', 'WFC', 'WELL', 'WST', 'WDC', 'WU', 'WRK', 'WY', 'WHR', 'WMB', 'WLTW', 'WYNN', 'XEL', 'XLNX', 'XYL', 'YUM', 'ZBRA', 'ZBH', 'ZION', 'ZTS']
+2025-12-12 00:16:41,413 - __main__ - INFO - Generated 3051 tasks.
+2025-12-12 00:16:41,413 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MMM)
+2025-12-12 00:16:41,417 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:41,417 - __main__ - INFO - Success: TIME_SERIES_DAILY (MMM) - 100 rows
+2025-12-12 00:16:41,417 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AOS)
+2025-12-12 00:16:41,418 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:41,720 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:41,725 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:41,725 - __main__ - INFO - Success: TIME_SERIES_DAILY (AOS) - 100 rows
+2025-12-12 00:16:41,725 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABT)
+2025-12-12 00:16:41,726 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABT', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:41,936 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:41,943 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABT)
+2025-12-12 00:16:41,943 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABBV)
+2025-12-12 00:16:41,947 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABBV', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:42,150 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:42,154 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABBV)
+2025-12-12 00:16:42,154 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABMD)
+2025-12-12 00:16:42,161 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:42,343 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:42,347 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ABMD)
+2025-12-12 00:16:42,347 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ACN)
+2025-12-12 00:16:42,350 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ACN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:42,529 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:42,533 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ACN)
+2025-12-12 00:16:42,533 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ATVI)
+2025-12-12 00:16:42,539 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:42,540 - __main__ - INFO - Success: TIME_SERIES_DAILY (ATVI) - 100 rows
+2025-12-12 00:16:42,540 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADM)
+2025-12-12 00:16:42,541 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:42,746 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:42,749 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:42,750 - __main__ - INFO - Success: TIME_SERIES_DAILY (ADM) - 100 rows
+2025-12-12 00:16:42,750 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADBE)
+2025-12-12 00:16:42,751 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADBE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:42,956 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:42,959 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ADBE)
+2025-12-12 00:16:42,959 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AAP)
+2025-12-12 00:16:42,961 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AAP', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:43,143 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:43,149 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AAP)
+2025-12-12 00:16:43,149 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMD)
+2025-12-12 00:16:43,154 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:43,332 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:43,337 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AMD)
+2025-12-12 00:16:43,337 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AES)
+2025-12-12 00:16:43,344 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AES', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:43,634 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:43,637 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AES)
+2025-12-12 00:16:43,638 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AFL)
+2025-12-12 00:16:43,647 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:43,647 - __main__ - INFO - Success: TIME_SERIES_DAILY (AFL) - 100 rows
+2025-12-12 00:16:43,647 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (A)
+2025-12-12 00:16:43,649 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'A', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:43,934 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:43,937 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:43,937 - __main__ - INFO - Success: TIME_SERIES_DAILY (A) - 100 rows
+2025-12-12 00:16:43,937 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (APD)
+2025-12-12 00:16:43,939 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'APD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:44,099 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:44,100 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (APD)
+2025-12-12 00:16:44,100 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AKAM)
+2025-12-12 00:16:44,103 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AKAM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:44,276 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:44,280 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AKAM)
+2025-12-12 00:16:44,280 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALK)
+2025-12-12 00:16:44,285 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALK', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:44,816 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:44,818 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALK)
+2025-12-12 00:16:44,818 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALB)
+2025-12-12 00:16:44,821 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALB', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:45,096 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:45,098 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:45,098 - __main__ - INFO - Success: TIME_SERIES_DAILY (ALB) - 100 rows
+2025-12-12 00:16:45,098 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ARE)
+2025-12-12 00:16:45,100 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:45,100 - __main__ - INFO - Success: TIME_SERIES_DAILY (ARE) - 100 rows
+2025-12-12 00:16:45,100 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALGN)
+2025-12-12 00:16:45,101 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALGN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:45,265 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:45,267 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALGN)
+2025-12-12 00:16:45,267 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALLE)
+2025-12-12 00:16:45,269 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALLE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:45,545 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:45,546 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALLE)
+2025-12-12 00:16:45,546 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (LNT)
+2025-12-12 00:16:45,549 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'LNT', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:45,823 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:45,829 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (LNT)
+2025-12-12 00:16:45,830 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ALL)
+2025-12-12 00:16:45,833 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ALL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:46,020 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:46,028 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (ALL)
+2025-12-12 00:16:46,028 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (GOOGL)
+2025-12-12 00:16:46,033 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'GOOGL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:46,269 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:46,271 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:46,272 - __main__ - INFO - Success: TIME_SERIES_DAILY (GOOGL) - 100 rows
+2025-12-12 00:16:46,272 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (GOOG)
+2025-12-12 00:16:46,274 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:46,274 - __main__ - INFO - Success: TIME_SERIES_DAILY (GOOG) - 100 rows
+2025-12-12 00:16:46,275 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MO)
+2025-12-12 00:16:46,276 - alpha_vantage - INFO - Loaded 100 rows from database for TIME_SERIES_DAILY
+2025-12-12 00:16:46,276 - __main__ - INFO - Success: TIME_SERIES_DAILY (MO) - 100 rows
+2025-12-12 00:16:46,276 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMZN)
+2025-12-12 00:16:46,277 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMZN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:46,493 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:46,496 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AMZN)
+2025-12-12 00:16:46,496 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMCR)
+2025-12-12 00:16:46,501 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMCR', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:46,714 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:46,718 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AMCR)
+2025-12-12 00:16:46,718 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AEE)
+2025-12-12 00:16:46,727 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AEE', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:46,917 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:46,919 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AEE)
+2025-12-12 00:16:46,920 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AAL)
+2025-12-12 00:16:46,926 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AAL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:47,111 - alpha_vantage - WARNING - API returned an error or note for TIME_SERIES_DAILY: {
+    "Information": "Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly. You may subscribe to any of the premium plans at https://www.alphavantage....
+2025-12-12 00:16:47,115 - __main__ - WARNING - No data returned for TIME_SERIES_DAILY (AAL)
+2025-12-12 00:16:47,115 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AEP)
+2025-12-12 00:16:47,119 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AEP', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:16:47,386 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 00:16:47,388 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:16:47,388 - __main__ - INFO - Success: TIME_SERIES_DAILY (AEP) - 100 rows
+2025-12-12 00:16:47,388 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AXP)
+2025-12-12 00:16:47,390 - rate_limiter - INFO - Daily request limit reached. Cannot make more requests today.
+2025-12-12 00:16:47,390 - __main__ - WARNING - Daily limit hit while processing TIME_SERIES_DAILY (AXP).
+2025-12-12 00:16:47,390 - __main__ - INFO - Sleeping for 86454 seconds (24.02 hours) until rate limit resets.
+2025-12-12 00:56:33,084 - __main__ - INFO - Starting data consumption script...
+2025-12-12 00:57:17,264 - __main__ - INFO - Starting data consumption script...
+2025-12-12 00:57:17,278 - utils - INFO - Read 505 stock symbols from stocks.txt
+2025-12-12 00:57:17,278 - __main__ - INFO - Loaded 505 symbols: ['MMM', 'AOS', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADM', 'ADBE', 'AAP', 'AMD', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT', 'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'APA', 'AAPL', 'AMAT', 'APTV', 'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B', 'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW', 'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY', 'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX', 'CME', 'CMS', 'KO', 'CTSH', 'CL', 'CMCSA', 'CMA', 'CAG', 'COP', 'ED', 'STZ', 'CPRT', 'GLW', 'CTVA', 'COST', 'CTRA', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA', 'DE', 'DAL', 'XRAY', 'DVN', 'DXCM', 'FANG', 'DLR', 'DFS', 'DISCA', 'DISCK', 'DISH', 'DG', 'DLTR', 'D', 'DPZ', 'DOV', 'DOW', 'DTE', 'DUK', 'DRE', 'DD', 'DXC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA', 'LLY', 'EMR', 'ENPH', 'ETR', 'EOG', 'EFX', 'EQIX', 'EQR', 'ESS', 'EL', 'ETSY', 'RE', 'EVRG', 'ES', 'EXC', 'EXPE', 'EXPD', 'EXR', 'XOM', 'FFIV', 'FB', 'FAST', 'FRT', 'FDX', 'FIS', 'FITB', 'FRC', 'FE', 'FISV', 'FLT', 'FMC', 'F', 'FTNT', 'FTV', 'FBHS', 'FOXA', 'FOX', 'BEN', 'FCX', 'GPS', 'GRMN', 'IT', 'GNRC', 'GD', 'GE', 'GIS', 'GM', 'GPC', 'GILD', 'GPN', 'GL', 'GS', 'HAL', 'HBI', 'HAS', 'HCA', 'PEAK', 'HSIC', 'HES', 'HPE', 'HLT', 'HOLX', 'HD', 'HON', 'HRL', 'HST', 'HWM', 'HPQ', 'HUM', 'HBAN', 'HII', 'IBM', 'IEX', 'IDXX', 'INFO', 'ITW', 'ILMN', 'INCY', 'IR', 'INTC', 'ICE', 'IFF', 'IP', 'IPG', 'INTU', 'ISRG', 'IVZ', 'IPGP', 'IQV', 'IRM', 'JBHT', 'JKHY', 'J', 'SJM', 'JNJ', 'JCI', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'KEYS', 'KMB', 'KIM', 'KMI', 'KLAC', 'KHC', 'KR', 'LHX', 'LH', 'LRCX', 'LW', 'LVS', 'LEG', 'LDOS', 'LEN', 'LNC', 'LIN', 'LYV', 'LKQ', 'LMT', 'L', 'LOW', 'LUMN', 'LYB', 'MTB', 'MRO', 'MPC', 'MKTX', 'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MTCH', 'MKC', 'MCD', 'MCK', 'MDT', 'MRK', 'MET', 'MTD', 'MGM', 'MCHP', 'MU', 'MSFT', 'MAA', 'MRNA', 'MHK', 'TAP', 'MDLZ', 'MPWR', 'MNST', 'MCO', 'MS', 'MSI', 'MSCI', 'NDAQ', 'NTAP', 'NFLX', 'NWL', 'NEM', 'NWSA', 'NWS', 'NEE', 'NLSN', 'NKE', 'NI', 'NSC', 'NTRS', 'NOC', 'NLOK', 'NCLH', 'NRG', 'NUE', 'NVDA', 'NVR', 'NXPI', 'ORLY', 'OXY', 'ODFL', 'OMC', 'OKE', 'ORCL', 'OGN', 'OTIS', 'PCAR', 'PKG', 'PH', 'PAYX', 'PAYC', 'PYPL', 'PENN', 'PNR', 'PBCT', 'PEP', 'PKI', 'PFE', 'PM', 'PSX', 'PNW', 'PXD', 'PNC', 'POOL', 'PPG', 'PPL', 'PFG', 'PG', 'PGR', 'PLD', 'PRU', 'PTC', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'QCOM', 'PWR', 'DGX', 'RL', 'RJF', 'RTX', 'O', 'REG', 'REGN', 'RF', 'RSG', 'RMD', 'RHI', 'ROK', 'ROL', 'ROP', 'ROST', 'RCL', 'SPGI', 'CRM', 'SBAC', 'SLB', 'STX', 'SEE', 'SRE', 'NOW', 'SHW', 'SPG', 'SWKS', 'SNA', 'SO', 'LUV', 'SWK', 'SBUX', 'STT', 'STE', 'SYK', 'SIVB', 'SYF', 'SNPS', 'SYY', 'TMUS', 'TROW', 'TTWO', 'TPR', 'TGT', 'TEL', 'TDY', 'TFX', 'TER', 'TSLA', 'TXN', 'TXT', 'COO', 'HIG', 'HSY', 'MOS', 'TRV', 'DIS', 'TMO', 'TJX', 'TSCO', 'TT', 'TDG', 'TRMB', 'TFC', 'TWTR', 'TYL', 'TSN', 'USB', 'UDR', 'ULTA', 'UAA', 'UA', 'UNP', 'UAL', 'UPS', 'URI', 'UNH', 'UHS', 'VLO', 'VTR', 'VRSN', 'VRSK', 'VZ', 'VRTX', 'VFC', 'VIAC', 'VTRS', 'V', 'VNO', 'VMC', 'WRB', 'GWW', 'WAB', 'WBA', 'WMT', 'WM', 'WAT', 'WEC', 'WFC', 'WELL', 'WST', 'WDC', 'WU', 'WRK', 'WY', 'WHR', 'WMB', 'WLTW', 'WYNN', 'XEL', 'XLNX', 'XYL', 'YUM', 'ZBRA', 'ZBH', 'ZION', 'ZTS']
+2025-12-12 00:57:17,279 - __main__ - INFO - Generated 3051 tasks.
+2025-12-12 00:57:17,279 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MMM)
+2025-12-12 00:57:17,279 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'MMM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:57:18,040 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_MMM_datatype_csv_outputsize_compact.parquet
+2025-12-12 00:57:18,044 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:57:18,044 - __main__ - INFO - Success: TIME_SERIES_DAILY (MMM) - 100 rows
+2025-12-12 00:57:18,044 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AOS)
+2025-12-12 00:57:18,044 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:57:19,125 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_AOS_datatype_csv_outputsize_compact.parquet
+2025-12-12 00:57:19,128 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:57:19,128 - __main__ - INFO - Success: TIME_SERIES_DAILY (AOS) - 100 rows
+2025-12-12 00:57:19,128 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABT)
+2025-12-12 00:57:19,135 - alpha_vantage - INFO - Loading from cache: data\files\TIME_SERIES_DAILY\symbol_ABT_datatype_csv_outputsize_compact.parquet
+2025-12-12 00:57:19,136 - __main__ - INFO - Success: TIME_SERIES_DAILY (ABT) - 100 rows
+2025-12-12 00:57:19,136 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABBV)
+2025-12-12 00:57:19,136 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABBV', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:57:19,526 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 00:58:19,527 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABBV', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:58:19,828 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_ABBV_datatype_csv_outputsize_compact.parquet
+2025-12-12 00:58:19,831 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:58:19,831 - __main__ - INFO - Success: TIME_SERIES_DAILY (ABBV) - 100 rows
+2025-12-12 00:58:19,831 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABMD)
+2025-12-12 00:58:19,831 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:58:20,011 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 00:59:20,012 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:59:20,268 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_ABMD_datatype_csv_outputsize_compact.parquet
+2025-12-12 00:59:20,270 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 00:59:20,271 - __main__ - INFO - Success: TIME_SERIES_DAILY (ABMD) - 100 rows
+2025-12-12 00:59:20,271 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ACN)
+2025-12-12 00:59:20,271 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ACN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 00:59:20,462 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:00:20,462 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ACN', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:00:20,751 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_ACN_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:00:20,757 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:00:20,757 - __main__ - INFO - Success: TIME_SERIES_DAILY (ACN) - 100 rows
+2025-12-12 01:00:20,757 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ATVI)
+2025-12-12 01:00:20,757 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ATVI', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:00:21,093 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:01:21,094 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ATVI', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:01:21,326 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_ATVI_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:01:21,329 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:01:21,329 - __main__ - INFO - Success: TIME_SERIES_DAILY (ATVI) - 100 rows
+2025-12-12 01:01:21,329 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADM)
+2025-12-12 01:01:21,329 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:01:21,498 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:02:21,500 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ADM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:02:21,881 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_ADM_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:02:21,884 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:02:21,884 - __main__ - INFO - Success: TIME_SERIES_DAILY (ADM) - 100 rows
+2025-12-12 01:02:21,884 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ADBE)
+2025-12-12 01:02:21,886 - alpha_vantage - INFO - Loading from cache: data\files\TIME_SERIES_DAILY\symbol_ADBE_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:02:21,887 - __main__ - INFO - Success: TIME_SERIES_DAILY (ADBE) - 100 rows
+2025-12-12 01:02:21,887 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AAP)
+2025-12-12 01:02:21,887 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AAP', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:02:22,086 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:03:22,087 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AAP', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:03:22,388 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_AAP_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:03:22,391 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:03:22,391 - __main__ - INFO - Success: TIME_SERIES_DAILY (AAP) - 100 rows
+2025-12-12 01:03:22,391 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AMD)
+2025-12-12 01:03:22,391 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:03:22,561 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:04:22,563 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AMD', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:04:23,363 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_AMD_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:04:23,367 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:04:23,367 - __main__ - INFO - Success: TIME_SERIES_DAILY (AMD) - 100 rows
+2025-12-12 01:04:23,367 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AES)
+2025-12-12 01:04:23,367 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AES', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:04:23,584 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:05:23,585 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AES', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:05:23,843 - alpha_vantage - INFO - Saved to cache: data\files\TIME_SERIES_DAILY\symbol_AES_datatype_csv_outputsize_compact.parquet
+2025-12-12 01:05:23,846 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:05:23,846 - __main__ - INFO - Success: TIME_SERIES_DAILY (AES) - 100 rows
+2025-12-12 01:05:23,846 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AFL)
+2025-12-12 01:05:23,847 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AFL', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:05:24,025 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 01:13:41,016 - __main__ - INFO - Starting data consumption script...
+2025-12-12 01:13:41,029 - utils - INFO - Read 505 stock symbols from stocks.txt
+2025-12-12 01:13:41,029 - __main__ - INFO - Loaded 505 symbols: ['MMM', 'AOS', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADM', 'ADBE', 'AAP', 'AMD', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT', 'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'APA', 'AAPL', 'AMAT', 'APTV', 'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B', 'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW', 'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY', 'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX', 'CME', 'CMS', 'KO', 'CTSH', 'CL', 'CMCSA', 'CMA', 'CAG', 'COP', 'ED', 'STZ', 'CPRT', 'GLW', 'CTVA', 'COST', 'CTRA', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA', 'DE', 'DAL', 'XRAY', 'DVN', 'DXCM', 'FANG', 'DLR', 'DFS', 'DISCA', 'DISCK', 'DISH', 'DG', 'DLTR', 'D', 'DPZ', 'DOV', 'DOW', 'DTE', 'DUK', 'DRE', 'DD', 'DXC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA', 'LLY', 'EMR', 'ENPH', 'ETR', 'EOG', 'EFX', 'EQIX', 'EQR', 'ESS', 'EL', 'ETSY', 'RE', 'EVRG', 'ES', 'EXC', 'EXPE', 'EXPD', 'EXR', 'XOM', 'FFIV', 'FB', 'FAST', 'FRT', 'FDX', 'FIS', 'FITB', 'FRC', 'FE', 'FISV', 'FLT', 'FMC', 'F', 'FTNT', 'FTV', 'FBHS', 'FOXA', 'FOX', 'BEN', 'FCX', 'GPS', 'GRMN', 'IT', 'GNRC', 'GD', 'GE', 'GIS', 'GM', 'GPC', 'GILD', 'GPN', 'GL', 'GS', 'HAL', 'HBI', 'HAS', 'HCA', 'PEAK', 'HSIC', 'HES', 'HPE', 'HLT', 'HOLX', 'HD', 'HON', 'HRL', 'HST', 'HWM', 'HPQ', 'HUM', 'HBAN', 'HII', 'IBM', 'IEX', 'IDXX', 'INFO', 'ITW', 'ILMN', 'INCY', 'IR', 'INTC', 'ICE', 'IFF', 'IP', 'IPG', 'INTU', 'ISRG', 'IVZ', 'IPGP', 'IQV', 'IRM', 'JBHT', 'JKHY', 'J', 'SJM', 'JNJ', 'JCI', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'KEYS', 'KMB', 'KIM', 'KMI', 'KLAC', 'KHC', 'KR', 'LHX', 'LH', 'LRCX', 'LW', 'LVS', 'LEG', 'LDOS', 'LEN', 'LNC', 'LIN', 'LYV', 'LKQ', 'LMT', 'L', 'LOW', 'LUMN', 'LYB', 'MTB', 'MRO', 'MPC', 'MKTX', 'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MTCH', 'MKC', 'MCD', 'MCK', 'MDT', 'MRK', 'MET', 'MTD', 'MGM', 'MCHP', 'MU', 'MSFT', 'MAA', 'MRNA', 'MHK', 'TAP', 'MDLZ', 'MPWR', 'MNST', 'MCO', 'MS', 'MSI', 'MSCI', 'NDAQ', 'NTAP', 'NFLX', 'NWL', 'NEM', 'NWSA', 'NWS', 'NEE', 'NLSN', 'NKE', 'NI', 'NSC', 'NTRS', 'NOC', 'NLOK', 'NCLH', 'NRG', 'NUE', 'NVDA', 'NVR', 'NXPI', 'ORLY', 'OXY', 'ODFL', 'OMC', 'OKE', 'ORCL', 'OGN', 'OTIS', 'PCAR', 'PKG', 'PH', 'PAYX', 'PAYC', 'PYPL', 'PENN', 'PNR', 'PBCT', 'PEP', 'PKI', 'PFE', 'PM', 'PSX', 'PNW', 'PXD', 'PNC', 'POOL', 'PPG', 'PPL', 'PFG', 'PG', 'PGR', 'PLD', 'PRU', 'PTC', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'QCOM', 'PWR', 'DGX', 'RL', 'RJF', 'RTX', 'O', 'REG', 'REGN', 'RF', 'RSG', 'RMD', 'RHI', 'ROK', 'ROL', 'ROP', 'ROST', 'RCL', 'SPGI', 'CRM', 'SBAC', 'SLB', 'STX', 'SEE', 'SRE', 'NOW', 'SHW', 'SPG', 'SWKS', 'SNA', 'SO', 'LUV', 'SWK', 'SBUX', 'STT', 'STE', 'SYK', 'SIVB', 'SYF', 'SNPS', 'SYY', 'TMUS', 'TROW', 'TTWO', 'TPR', 'TGT', 'TEL', 'TDY', 'TFX', 'TER', 'TSLA', 'TXN', 'TXT', 'COO', 'HIG', 'HSY', 'MOS', 'TRV', 'DIS', 'TMO', 'TJX', 'TSCO', 'TT', 'TDG', 'TRMB', 'TFC', 'TWTR', 'TYL', 'TSN', 'USB', 'UDR', 'ULTA', 'UAA', 'UA', 'UNP', 'UAL', 'UPS', 'URI', 'UNH', 'UHS', 'VLO', 'VTR', 'VRSN', 'VRSK', 'VZ', 'VRTX', 'VFC', 'VIAC', 'VTRS', 'V', 'VNO', 'VMC', 'WRB', 'GWW', 'WAB', 'WBA', 'WMT', 'WM', 'WAT', 'WEC', 'WFC', 'WELL', 'WST', 'WDC', 'WU', 'WRK', 'WY', 'WHR', 'WMB', 'WLTW', 'WYNN', 'XEL', 'XLNX', 'XYL', 'YUM', 'ZBRA', 'ZBH', 'ZION', 'ZTS']
+2025-12-12 01:13:41,031 - __main__ - INFO - Generated 3051 tasks.
+2025-12-12 01:13:41,031 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MMM)
+2025-12-12 01:13:41,032 - alpha_vantage - ERROR - Error reading parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 01:13:41,032 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'MMM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:13:41,454 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 01:13:41,459 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 01:13:41,459 - __main__ - INFO - Success: TIME_SERIES_DAILY (MMM) - 100 rows
+2025-12-12 01:13:41,459 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AOS)
+2025-12-12 01:13:41,459 - alpha_vantage - ERROR - Error reading parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 01:13:41,459 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 01:13:41,887 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 18:22:40,574 - __main__ - INFO - Starting data consumption script...
+2025-12-12 18:22:40,664 - utils - INFO - Read 505 stock symbols from stocks.txt
+2025-12-12 18:22:40,665 - __main__ - INFO - Loaded 505 symbols: ['MMM', 'AOS', 'ABT', 'ABBV', 'ABMD', 'ACN', 'ATVI', 'ADM', 'ADBE', 'AAP', 'AMD', 'AES', 'AFL', 'A', 'APD', 'AKAM', 'ALK', 'ALB', 'ARE', 'ALGN', 'ALLE', 'LNT', 'ALL', 'GOOGL', 'GOOG', 'MO', 'AMZN', 'AMCR', 'AEE', 'AAL', 'AEP', 'AXP', 'AIG', 'AMT', 'AWK', 'AMP', 'ABC', 'AME', 'AMGN', 'APH', 'ADI', 'ANSS', 'ANTM', 'AON', 'APA', 'AAPL', 'AMAT', 'APTV', 'ANET', 'AJG', 'AIZ', 'T', 'ATO', 'ADSK', 'ADP', 'AZO', 'AVB', 'AVY', 'BKR', 'BLL', 'BAC', 'BBWI', 'BAX', 'BDX', 'BRK.B', 'BBY', 'BIO', 'TECH', 'BIIB', 'BLK', 'BK', 'BA', 'BKNG', 'BWA', 'BXP', 'BSX', 'BMY', 'AVGO', 'BR', 'BRO', 'BF.B', 'CHRW', 'CDNS', 'CZR', 'CPB', 'COF', 'CAH', 'KMX', 'CCL', 'CARR', 'CTLT', 'CAT', 'CBOE', 'CBRE', 'CDW', 'CE', 'CNC', 'CNP', 'CDAY', 'CERN', 'CF', 'CRL', 'SCHW', 'CHTR', 'CVX', 'CMG', 'CB', 'CHD', 'CI', 'CINF', 'CTAS', 'CSCO', 'C', 'CFG', 'CTXS', 'CLX', 'CME', 'CMS', 'KO', 'CTSH', 'CL', 'CMCSA', 'CMA', 'CAG', 'COP', 'ED', 'STZ', 'CPRT', 'GLW', 'CTVA', 'COST', 'CTRA', 'CCI', 'CSX', 'CMI', 'CVS', 'DHI', 'DHR', 'DRI', 'DVA', 'DE', 'DAL', 'XRAY', 'DVN', 'DXCM', 'FANG', 'DLR', 'DFS', 'DISCA', 'DISCK', 'DISH', 'DG', 'DLTR', 'D', 'DPZ', 'DOV', 'DOW', 'DTE', 'DUK', 'DRE', 'DD', 'DXC', 'EMN', 'ETN', 'EBAY', 'ECL', 'EIX', 'EW', 'EA', 'LLY', 'EMR', 'ENPH', 'ETR', 'EOG', 'EFX', 'EQIX', 'EQR', 'ESS', 'EL', 'ETSY', 'RE', 'EVRG', 'ES', 'EXC', 'EXPE', 'EXPD', 'EXR', 'XOM', 'FFIV', 'FB', 'FAST', 'FRT', 'FDX', 'FIS', 'FITB', 'FRC', 'FE', 'FISV', 'FLT', 'FMC', 'F', 'FTNT', 'FTV', 'FBHS', 'FOXA', 'FOX', 'BEN', 'FCX', 'GPS', 'GRMN', 'IT', 'GNRC', 'GD', 'GE', 'GIS', 'GM', 'GPC', 'GILD', 'GPN', 'GL', 'GS', 'HAL', 'HBI', 'HAS', 'HCA', 'PEAK', 'HSIC', 'HES', 'HPE', 'HLT', 'HOLX', 'HD', 'HON', 'HRL', 'HST', 'HWM', 'HPQ', 'HUM', 'HBAN', 'HII', 'IBM', 'IEX', 'IDXX', 'INFO', 'ITW', 'ILMN', 'INCY', 'IR', 'INTC', 'ICE', 'IFF', 'IP', 'IPG', 'INTU', 'ISRG', 'IVZ', 'IPGP', 'IQV', 'IRM', 'JBHT', 'JKHY', 'J', 'SJM', 'JNJ', 'JCI', 'JPM', 'JNPR', 'KSU', 'K', 'KEY', 'KEYS', 'KMB', 'KIM', 'KMI', 'KLAC', 'KHC', 'KR', 'LHX', 'LH', 'LRCX', 'LW', 'LVS', 'LEG', 'LDOS', 'LEN', 'LNC', 'LIN', 'LYV', 'LKQ', 'LMT', 'L', 'LOW', 'LUMN', 'LYB', 'MTB', 'MRO', 'MPC', 'MKTX', 'MAR', 'MMC', 'MLM', 'MAS', 'MA', 'MTCH', 'MKC', 'MCD', 'MCK', 'MDT', 'MRK', 'MET', 'MTD', 'MGM', 'MCHP', 'MU', 'MSFT', 'MAA', 'MRNA', 'MHK', 'TAP', 'MDLZ', 'MPWR', 'MNST', 'MCO', 'MS', 'MSI', 'MSCI', 'NDAQ', 'NTAP', 'NFLX', 'NWL', 'NEM', 'NWSA', 'NWS', 'NEE', 'NLSN', 'NKE', 'NI', 'NSC', 'NTRS', 'NOC', 'NLOK', 'NCLH', 'NRG', 'NUE', 'NVDA', 'NVR', 'NXPI', 'ORLY', 'OXY', 'ODFL', 'OMC', 'OKE', 'ORCL', 'OGN', 'OTIS', 'PCAR', 'PKG', 'PH', 'PAYX', 'PAYC', 'PYPL', 'PENN', 'PNR', 'PBCT', 'PEP', 'PKI', 'PFE', 'PM', 'PSX', 'PNW', 'PXD', 'PNC', 'POOL', 'PPG', 'PPL', 'PFG', 'PG', 'PGR', 'PLD', 'PRU', 'PTC', 'PEG', 'PSA', 'PHM', 'PVH', 'QRVO', 'QCOM', 'PWR', 'DGX', 'RL', 'RJF', 'RTX', 'O', 'REG', 'REGN', 'RF', 'RSG', 'RMD', 'RHI', 'ROK', 'ROL', 'ROP', 'ROST', 'RCL', 'SPGI', 'CRM', 'SBAC', 'SLB', 'STX', 'SEE', 'SRE', 'NOW', 'SHW', 'SPG', 'SWKS', 'SNA', 'SO', 'LUV', 'SWK', 'SBUX', 'STT', 'STE', 'SYK', 'SIVB', 'SYF', 'SNPS', 'SYY', 'TMUS', 'TROW', 'TTWO', 'TPR', 'TGT', 'TEL', 'TDY', 'TFX', 'TER', 'TSLA', 'TXN', 'TXT', 'COO', 'HIG', 'HSY', 'MOS', 'TRV', 'DIS', 'TMO', 'TJX', 'TSCO', 'TT', 'TDG', 'TRMB', 'TFC', 'TWTR', 'TYL', 'TSN', 'USB', 'UDR', 'ULTA', 'UAA', 'UA', 'UNP', 'UAL', 'UPS', 'URI', 'UNH', 'UHS', 'VLO', 'VTR', 'VRSN', 'VRSK', 'VZ', 'VRTX', 'VFC', 'VIAC', 'VTRS', 'V', 'VNO', 'VMC', 'WRB', 'GWW', 'WAB', 'WBA', 'WMT', 'WM', 'WAT', 'WEC', 'WFC', 'WELL', 'WST', 'WDC', 'WU', 'WRK', 'WY', 'WHR', 'WMB', 'WLTW', 'WYNN', 'XEL', 'XLNX', 'XYL', 'YUM', 'ZBRA', 'ZBH', 'ZION', 'ZTS']
+2025-12-12 18:22:40,677 - __main__ - INFO - Generated 3051 tasks.
+2025-12-12 18:22:40,677 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (MMM)
+2025-12-12 18:22:40,678 - alpha_vantage - ERROR - Error reading parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 18:22:40,678 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'MMM', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 18:22:41,234 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 18:22:41,239 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 18:22:41,239 - __main__ - INFO - Success: TIME_SERIES_DAILY (MMM) - 100 rows
+2025-12-12 18:22:41,239 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (AOS)
+2025-12-12 18:22:41,239 - alpha_vantage - ERROR - Error reading parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 18:22:41,239 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 18:22:41,612 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.
+2025-12-12 18:23:41,613 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'AOS', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 18:23:41,997 - alpha_vantage - ERROR - Error saving parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 18:23:42,000 - alpha_vantage - INFO - Saved 100 rows to TIME_SERIES_DAILY
+2025-12-12 18:23:42,000 - __main__ - INFO - Success: TIME_SERIES_DAILY (AOS) - 100 rows
+2025-12-12 18:23:42,000 - __main__ - INFO - Processing task: TIME_SERIES_DAILY (ABT)
+2025-12-12 18:23:42,000 - alpha_vantage - ERROR - Error reading parquet cache: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
+A suitable version of pyarrow or fastparquet is required for parquet support.
+Trying to import the above resulted in these errors:
+ - Missing optional dependency 'pyarrow'. pyarrow is required for parquet support. Use pip or conda to install pyarrow.
+ - Missing optional dependency 'fastparquet'. fastparquet is required for parquet support. Use pip or conda to install fastparquet.
+2025-12-12 18:23:42,000 - alpha_vantage - INFO - Fetching data for TIME_SERIES_DAILY with params: {'symbol': 'ABT', 'outputsize': 'compact', 'datatype': 'csv'}
+2025-12-12 18:23:42,365 - alpha_vantage - WARNING - API rate limit hint received (RPM). Sleeping 60s and retrying.

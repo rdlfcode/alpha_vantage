@@ -43,3 +43,13 @@ class RateLimiter:
       logger.debug("Request made. RPM: %d/%d, RPD: %d/%d",
                 len(self.minute_timestamps), self.requests_per_minute,
                 len(self.day_timestamps), self.requests_per_day)
+
+   def set_daily_limit_reached(self):
+      """
+      Manually set the rate limiter to the daily limit reached state.
+      Fills the day timestamps with current time to block further requests.
+      """
+      current_time = time.time()
+      while len(self.day_timestamps) < self.requests_per_day:
+         self.day_timestamps.append(current_time)
+      logger.warning(f"Daily limit manually set. Day timestamps count: {len(self.day_timestamps)}")

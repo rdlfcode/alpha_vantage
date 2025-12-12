@@ -6,9 +6,11 @@ Handles data fetching, parsing, caching, and rate limiting in a unified interfac
 """
 
 import os
+import time
 import requests
 import pandas as pd
 import duckdb
+
 from duckdb import DuckDBPyConnection
 
 import logging
@@ -137,11 +139,33 @@ class AlphaVantageClient:
         try:
             response = requests.get(BASE_URL, params=full_params, timeout=30)
             response.raise_for_status()
+            response_text = response.text
 
-            # Check for API errors
-            if "Information" in response.text or "Note" in response.text:
+            # Check for specific rate limit warning (daily)
+            # User reported message: "standard API rate limit is 25 requests per day"
+            if "standard API rate limit" in response_text and "requests per day" in response_text:
+                self.logger.warning("Daily API rate limit reached (detected from API response).")
+                self.rate_limiter.set_daily_limit_reached()
+                return None
+
+            # Check for API errors or Notes in the response
+            # Some endpoints return JSON with "Information" or "Note" even if we asked for CSV
+            if "Information" in response_text or "Note" in response_text:
+                # Double check if it's the daily limit inside a JSON structure
+                if "standard API rate limit" in response_text and "requests per day" in response_text:
+                     self.logger.warning("Daily API rate limit reached (detected from API response).")
+                     self.rate_limiter.set_daily_limit_reached()
+                     return None
+                
+                # Check for Minute/RPM limit hint
+                # Message: "Please consider spreading out your free API requests more sparingly."
+                if "consider spreading out your free API requests" in response_text:
+                    self.logger.warning("API rate limit hint received (RPM). Sleeping 60s and retrying.")
+                    time.sleep(60)
+                    return self._fetch_data(endpoint_name, params)
+
                 self.logger.warning(
-                    f"API returned an error or note for {endpoint_name}: {response.text[:200]}..."
+                    f"API returned an error or note for {endpoint_name}: {response_text[:200]}..."
                 )
                 return None
 
@@ -299,7 +323,7 @@ class AlphaVantageClient:
         filepath = self._generate_filepath(endpoint_name, params)
         if filepath.exists():
             try:
-                df = pd.read_parquet(filepath)
+                df = pd.read_parquet(filepath, engine='pyarrow')
                 self.logger.info(f"Loading from cache: {filepath}")
                 # Ensure index is set if it was reset
                 if "dt" in df.columns:
@@ -321,7 +345,7 @@ class AlphaVantageClient:
         filepath = self._generate_filepath(endpoint_name, params)
         try:
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            df.to_parquet(filepath)
+            df.to_parquet(filepath, engine='pyarrow')
             self.logger.info(f"Saved to cache: {filepath}")
         except Exception as e:
             self.logger.error(f"Error saving parquet cache: {e}")
@@ -389,9 +413,9 @@ class AlphaVantageClient:
             if isinstance(e, duckdb.CatalogException) or "does not exist" in str(e):
                 try:
                     # Create table
-                    schema_s avs.TABLE_SCHEMAS.get(endpoint_name)
-                    if endpoint_nam avs.MACRO_ENDPOINTS:
-                        schema_= avs.TABLE_SCHEMAS.get("MACRO")
+                    schema_sql = TABLE_SCHEMAS.get(endpoint_name)
+                    if endpoint_name in MACRO_ENDPOINTS:
+                        schema_sql = TABLE_SCHEMAS.get("MACRO")
 
                     if schema_sql:
                         conn.execute(schema_sql)
