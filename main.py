@@ -3,24 +3,31 @@ from alpha_vantage import AlphaVantageClient
 import alpha_vantage_schema as avs
 
 if __name__ == "__main__":
-   load_dotenv()
+   import duckdb
+   from pathlib import Path
+   from settings import settings
 
-   # Create AV client (for reuse later)
-   client = AlphaVantageClient()
+   conn = duckdb.connect(Path(settings.get("db_path", "data/alpha_vantage.db")))
+   result = conn.execute("SELECT * FROM TIME_SERIES_INTRADAY").df()
+   print(result)
+   # load_dotenv()
 
-   # Dynamically create endpoints from the schema
-   endpoints = avs.DEFAULT_ENDPOINTS
+   # # Create AV client (for reuse later)
+   # client = AlphaVantageClient()
 
-   # Fetch the data
-   df = client.get_data(
-      symbols=["GOOG"],
-      endpoints=endpoints,
-      force_refresh=False
-   )
+   # # Dynamically create endpoints from the schema
+   # endpoints = avs.DEFAULT_ENDPOINTS
 
-   # Print the first few rows of the combined DataFrame
-   if not df.empty:
-      print("Successfully fetched and combined data:")    
-      print(df.head())
-   else:
-      print("Could not fetch any data.")
+   # # Fetch the data
+   # df = client.get_data(
+   #    symbols=["GOOG"],
+   #    endpoints=endpoints,
+   #    force_refresh=False
+   # )
+
+   # # Print the first few rows of the combined DataFrame
+   # if not df.empty:
+   #    print("Successfully fetched and combined data:")    
+   #    print(df.head())
+   # else:
+   #    print("Could not fetch any data.")

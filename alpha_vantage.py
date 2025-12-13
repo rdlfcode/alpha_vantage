@@ -10,15 +10,12 @@ import time
 import requests
 import pandas as pd
 import duckdb
-
 from duckdb import DuckDBPyConnection
-
 import logging
 from io import StringIO
 from pathlib import Path
 from typing import Optional, Dict, List, Union
 from dotenv import load_dotenv
-
 from alpha_vantage_schema import (
     BASE_URL,
     SYMBOL_ENDPOINTS,
@@ -210,14 +207,28 @@ class AlphaVantageClient:
                     time_series_key = next(k for k in data.keys() if "Time Series" in k)
                     time_series_data = data[time_series_key]
                     if isinstance(time_series_data, dict):
-                        df = pd.DataFrame.from_dict(time_series_data, orient="index")
-                        df.index = pd.to_datetime(df.index)
-                        df.index.name = "dt"
+                        # Convert dict of dicts to list of dicts with 'dt' column
+                        records = []
+                        for date_str, values in time_series_data.items():
+                            if isinstance(values, dict):
+                                record = values.copy()
+                                record["dt"] = date_str
+                                records.append(record)
+                        
+                        df = pd.DataFrame(records)
+                        
+                        if "dt" in df.columns:
+                            df["dt"] = pd.to_datetime(df["dt"])
+                            df.set_index("dt", inplace=True)
+                            df.index.name = "dt"
+                        
                         df = df.apply(pd.to_numeric, errors="coerce")
+                        
                         # Rename columns to remove "1. ", "2. ", etc.
-                        df.columns = [
-                            c.split(". ")[1] if ". " in c else c for c in df.columns
-                        ]
+                        df.rename(
+                            columns=lambda c: c.split(". ")[1] if ". " in c else c,
+                            inplace=True,
+                        )
 
                 elif any("data" in k.lower() for k in data.keys()):
                     # Economic indicators and commodities
@@ -241,7 +252,7 @@ class AlphaVantageClient:
 
                 else:
                     # Fallback for other structures
-                    df = pd.DataFrame.from_dict(data, orient="index").transpose()
+                    df = pd.DataFrame([data])
 
             # Standardize datetime column
             for col_name in [
