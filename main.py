@@ -8,7 +8,7 @@ if __name__ == "__main__":
    from settings import settings
 
    conn = duckdb.connect(Path(settings.get("db_path", "data/alpha_vantage.db")))
-   result = conn.execute("SELECT * FROM TIME_SERIES_INTRADAY").df()
+   result = conn.execute("SELECT * FROM TIME_SERIES_DAILY WHERE symbol = 'GOOG'").df()
    print(result)
    # load_dotenv()
 

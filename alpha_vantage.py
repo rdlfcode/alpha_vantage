@@ -279,7 +279,7 @@ class AlphaVantageClient:
             return pd.DataFrame()
 
         return df
-
+        
     def _get_from_db(self, endpoint_name: str, params: Dict) -> pd.DataFrame:
         """
         Attempts to retrieve data from the database.
@@ -318,31 +318,31 @@ class AlphaVantageClient:
             if should_close:
                 self.conn.close()
 
-    def _fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False) -> pd.DataFrame:
+    def fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False) -> pd.DataFrame:
         """
         Fetches, parses, and caches data for a single endpoint call.
         Checks DB first, then falls back to API.
         """
-        # 1. Try DB first if not forcing refresh
         if not force_refresh:
+            # 1. Try DB first if not forcing refresh
             df = self._get_from_db(endpoint_name, params)
             if not df.empty:
                 self.logger.info(f"Loaded {len(df)} rows from database for {endpoint_name}")
                 return df
 
-        # 1.5 Try Parquet Cache (Fallback if DB miss)
-        filepath = self._generate_filepath(endpoint_name, params)
-        if filepath.exists():
-            try:
-                df = pd.read_parquet(filepath, engine='pyarrow')
-                self.logger.info(f"Loading from cache: {filepath}")
-                # Ensure index is set if it was reset
-                if "dt" in df.columns:
-                    df["dt"] = pd.to_datetime(df["dt"])
-                    df.set_index("dt", inplace=True)
-                return df
-            except Exception as e:
-                self.logger.error(f"Error reading parquet cache: {e}")
+            # 1.5 Try Parquet Cache (Fallback if DB miss)
+            filepath = self._generate_filepath(endpoint_name, params)
+            if filepath.exists():
+                try:
+                    df = pd.read_parquet(filepath, engine='pyarrow')
+                    self.logger.info(f"Loading from cache: {filepath}")
+                    # Ensure index is set if it was reset
+                    if "dt" in df.columns:
+                        df["dt"] = pd.to_datetime(df["dt"])
+                        df.set_index("dt", inplace=True)
+                    return df
+                except Exception as e:
+                    self.logger.error(f"Error reading parquet cache: {e}")
 
         # 2. Fetch fresh data (API)
         raw_data = self._fetch_data(endpoint_name, params)
@@ -499,7 +499,7 @@ class AlphaVantageClient:
                         # Create a copy of params to avoid modifying the original dict in the loop
                         current_params = params.copy()
                         current_params.update({"symbol": symbol})
-                        df = self._fetch_and_cache_data(
+                        df = self.fetch_and_cache_data(
                             endpoint_name, current_params, force_refresh
                         )
                         if not df.empty:
@@ -515,7 +515,7 @@ class AlphaVantageClient:
             }
             for endpoint_name, params in macro_endpoints_map.items():
                 try:
-                    df = self._fetch_and_cache_data(
+                    df = self.fetch_and_cache_data(
                         endpoint_name, params, force_refresh
                     )
                     if not df.empty:

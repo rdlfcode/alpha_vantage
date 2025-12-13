@@ -1,8 +1,8 @@
 2025-12-07 15:45:10,177 - alpha_vantage - ERROR - Error in get_data: name 'avs' is not defined
 Traceback (most recent call last):
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 403, in get_data
-    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
-  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 264, in _fetch_and_cache_data
+    df = self.fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 264, in fetch_and_cache_data
     df = self._get_from_db(endpoint_name, params)
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 224, in _get_from_db
     if endpoint_name in avs.MACRO_ENDPOINTS:
@@ -87,8 +87,8 @@ NameError: name 'avs' is not defined. Did you mean: 'abs'?
 2025-12-07 15:47:20,512 - alpha_vantage - ERROR - Error in get_data: Daily request limit reached.
 Traceback (most recent call last):
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 410, in get_data
-    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
-  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 270, in _fetch_and_cache_data
+    df = self.fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 270, in fetch_and_cache_data
     raw_data = self._fetch_data(endpoint_name, params)
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 113, in _fetch_data
     self.rate_limiter.wait_if_needed()
@@ -175,8 +175,8 @@ Exception: Daily request limit reached.
 2025-12-07 15:49:30,626 - alpha_vantage - ERROR - Error in get_data: Daily request limit reached.
 Traceback (most recent call last):
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 479, in get_data
-    df = self._fetch_and_cache_data(endpoint_name, params, force_refresh)
-  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 303, in _fetch_and_cache_data
+    df = self.fetch_and_cache_data(endpoint_name, params, force_refresh)
+  File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 303, in fetch_and_cache_data
     raw_data = self._fetch_data(endpoint_name, params)
   File "/Users/roman/Projects/alpha_vantage/alpha_vantage.py", line 127, in _fetch_data
     self.rate_limiter.wait_if_needed()

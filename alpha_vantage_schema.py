@@ -14,7 +14,7 @@ PREMIUM_ENDPOINTS = [
 ]
 
 DEFAULT_ENDPOINTS = {
-   "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "compact", "datatype": "csv"},
+   "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
    "INSIDER_TRANSACTIONS": {"symbol": None},
    "INCOME_STATEMENT": {"symbol": None},
    "BALANCE_SHEET": {"symbol": None},

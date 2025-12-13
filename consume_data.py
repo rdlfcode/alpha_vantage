@@ -55,9 +55,9 @@ def main():
         logger.info(f"Processing task: {task_desc}")
 
         try:
-            # We use _fetch_and_cache_data directly to have fine-grained control
+            # We use fetch_and_cache_data directly to have fine-grained control
             # This method handles DB and Parquet saving
-            df = client._fetch_and_cache_data(
+            df = client.fetch_and_cache_data(
                 endpoint_name,
                 params,
                 True)
