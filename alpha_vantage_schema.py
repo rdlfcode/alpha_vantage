@@ -5,14 +5,6 @@ This module contains all the schemas, constants, and configurations for the Alph
 It serves as the single source of truth for API endpoints and their parameters.
 """
 
-BASE_URL = "https://www.alphavantage.co/query"
-
-PREMIUM_ENDPOINTS = [
-   "TIME_SERIES_DAILY_ADJUSTED", "REALTIME_BULK_QUOTES", "REALTIME_OPTIONS",
-   "FX_INTRADAY", "CRYPTO_INTRADAY", "ANALYTICS_FIXED_WINDOW",
-   "ANALYTICS_SLIDING_WINDOW", "VWAP", "MACD"
-]
-
 DEFAULT_ENDPOINTS = {
    "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
    "INSIDER_TRANSACTIONS": {"symbol": None},
@@ -310,6 +302,8 @@ CREATE TABLE HISTORICAL_OPTIONS (
 );""",
 }
 
+BASE_URL = "https://www.alphavantage.co/query"
+
 SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v]
 
 MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
@@ -319,6 +313,12 @@ FUNDAMENTAL_ENDPOINTS = [
     "BALANCE_SHEET",
     "CASH_FLOW",
     "EARNINGS"
+]
+
+PREMIUM_ENDPOINTS = [
+   "TIME_SERIES_DAILY_ADJUSTED", "REALTIME_BULK_QUOTES", "REALTIME_OPTIONS",
+   "FX_INTRADAY", "CRYPTO_INTRADAY", "ANALYTICS_FIXED_WINDOW",
+   "ANALYTICS_SLIDING_WINDOW", "VWAP", "MACD"
 ]
 
 # Map endpoints to their tables

@@ -4,6 +4,7 @@ Alpha Vantage Client
 A comprehensive client for interacting with the Alpha Vantage API.
 Handles data fetching, parsing, caching, and rate limiting in a unified interface.
 """
+import utils
 import os
 import time
 import requests
@@ -106,30 +107,6 @@ class AlphaVantageClient:
             self.conn = duckdb.connect(db_conn)
         else:
             self.conn = duckdb.connect(settings.get("db_path", "data/alpha_vantage.db"))
-
-    def _generate_filepath(self, endpoint_name: str, params: Dict) -> Path:
-        """
-        Generates a consistent filename from the endpoint and its parameters.
-        """
-        filename_parts = []
-        params_copy = params.copy()
-
-        # Handle symbol-like parameters first
-        symbol_like_keys = ["symbol", "keywords", "tickers", "from_symbol", "to_symbol"]
-        for key in symbol_like_keys:
-            if key in params_copy:
-                filename_parts.append(f"symbol_{params_copy.pop(key)}")
-                break
-
-        # Add other parameters in sorted order
-        for key, value in sorted(params_copy.items()):
-            if key != "apikey" and isinstance(value, str):
-                filename_parts.append(f"{key}_{value}")
-
-        filename = "_".join(filename_parts) + settings.get("data_ext", ".parquet")
-        path = self.data_dir / "files" / endpoint_name / filename
-
-        return path
 
     def _fetch_data(
         self, endpoint_name: str, params: Dict
@@ -630,7 +607,7 @@ class AlphaVantageClient:
                     return df
 
             # 1.5 Try Parquet Cache (Fallback if DB miss)
-            filepath = self._generate_filepath(endpoint_name, params)
+            filepath = utils.generate_filepath(self.data_dir, endpoint_name, params)
             if filepath.exists():
                 try:
                     df = pd.read_parquet(filepath, engine='pyarrow')
@@ -666,7 +643,7 @@ class AlphaVantageClient:
 
         # 3. Save to Parquet (Redundancy)
         # Generate cache filename
-        filepath = self._generate_filepath(endpoint_name, params)
+        filepath = utils.generate_filepath(self.data_dir, endpoint_name, params)
         try:
             filepath.parent.mkdir(parents=True, exist_ok=True)
             df.to_parquet(filepath, engine='pyarrow')

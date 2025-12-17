@@ -63,6 +63,30 @@ def read_stock_symbols(file_path: str = "stocks.txt") -> List[str]:
       logger.error(f"Error reading stock symbols from {file_path}: {e}")
       return []
 
+def generate_filepath(data_dir: str, endpoint_name: str, params: Dict) -> Path:
+   """
+   Generates a consistent filename from the endpoint and its parameters.
+   """
+   filename_parts = []
+   params_copy = params.copy()
+
+   # Handle symbol-like parameters first
+   symbol_like_keys = ["symbol", "keywords", "tickers", "from_symbol", "to_symbol"]
+   for key in symbol_like_keys:
+      if key in params_copy:
+            filename_parts.append(f"symbol_{params_copy.pop(key)}")
+            break
+
+   # Add other parameters in sorted order
+   for key, value in sorted(params_copy.items()):
+      if key != "apikey" and isinstance(value, str):
+            filename_parts.append(f"{key}_{value}")
+
+   filename = "_".join(filename_parts) + settings.get("data_ext", ".parquet")
+   path = data_dir / "files" / endpoint_name / filename
+
+   return path
+
 def get_dataset(sql_query: str, db_path: str) -> pd.DataFrame:
    """
    Execute SQL query against the database and return results as DataFrame.
