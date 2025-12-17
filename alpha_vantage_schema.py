@@ -6,34 +6,35 @@ It serves as the single source of truth for API endpoints and their parameters.
 """
 
 DEFAULT_ENDPOINTS = {
-   "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
-   "INSIDER_TRANSACTIONS": {"symbol": None},
-   "INCOME_STATEMENT": {"symbol": None},
-   "BALANCE_SHEET": {"symbol": None},
-   "CASH_FLOW": {"symbol": None},
-   "EARNINGS": {"symbol": None},
-   "HISTORICAL_OPTIONS": {"symbol": None, "date": None, "datatype": "csv"},
-   "WTI": {"interval": "daily", "datatype": "csv"},
-   "BRENT": {"interval": "daily", "datatype": "csv"},
-   "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
-   "COPPER": {"interval": "monthly", "datatype": "csv"},
-   "ALUMINUM": {"interval": "monthly", "datatype": "csv"},
-   "WHEAT": {"interval": "monthly", "datatype": "csv"},
-   "CORN": {"interval": "monthly", "datatype": "csv"},
-   "COTTON": {"interval": "monthly", "datatype": "csv"},
-   "SUGAR": {"interval": "monthly", "datatype": "csv"},
-   "COFFEE": {"interval": "monthly", "datatype": "csv"},
-   "ALL_COMMODITIES": {"interval": "monthly", "datatype": "csv"},
-   "REAL_GDP": {"interval": "quarterly", "datatype": "csv"},
-   "REAL_GDP_PER_CAPITA": {"datatype": "csv"},
-   "TREASURY_YIELD": {"interval": "daily", "maturity": "3month", "datatype": "csv"},
-   "FEDERAL_FUNDS_RATE": {"interval": "daily", "datatype": "csv"},
-   "CPI": {"interval": "monthly", "datatype": "csv"},
-   "INFLATION": {"datatype": "csv"},
-   "RETAIL_SALES": {"datatype": "csv"},
-   "DURABLES": {"datatype": "csv"},
-   "UNEMPLOYMENT": {"datatype": "csv"},
-   "NONFARM_PAYROLL": {"datatype": "csv"},
+   # "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
+   # "INSIDER_TRANSACTIONS": {"symbol": None},
+   # "INCOME_STATEMENT": {"symbol": None},
+   # "BALANCE_SHEET": {"symbol": None},
+   # "CASH_FLOW": {"symbol": None},
+   # "EARNINGS": {"symbol": None},
+   "OVERVIEW": {"symbol": None},
+   # "HISTORICAL_OPTIONS": {"symbol": None, "date": None, "datatype": "csv"},
+   # "WTI": {"interval": "daily", "datatype": "csv"},
+   # "BRENT": {"interval": "daily", "datatype": "csv"},
+   # "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
+   # "COPPER": {"interval": "monthly", "datatype": "csv"},
+   # "ALUMINUM": {"interval": "monthly", "datatype": "csv"},
+   # "WHEAT": {"interval": "monthly", "datatype": "csv"},
+   # "CORN": {"interval": "monthly", "datatype": "csv"},
+   # "COTTON": {"interval": "monthly", "datatype": "csv"},
+   # "SUGAR": {"interval": "monthly", "datatype": "csv"},
+   # "COFFEE": {"interval": "monthly", "datatype": "csv"},
+   # "ALL_COMMODITIES": {"interval": "monthly", "datatype": "csv"},
+   # "REAL_GDP": {"interval": "quarterly", "datatype": "csv"},
+   # "REAL_GDP_PER_CAPITA": {"datatype": "csv"},
+   # "TREASURY_YIELD": {"interval": "daily", "maturity": "3month", "datatype": "csv"},
+   # "FEDERAL_FUNDS_RATE": {"interval": "daily", "datatype": "csv"},
+   # "CPI": {"interval": "monthly", "datatype": "csv"},
+   # "INFLATION": {"datatype": "csv"},
+   # "RETAIL_SALES": {"datatype": "csv"},
+   # "DURABLES": {"datatype": "csv"},
+   # "UNEMPLOYMENT": {"datatype": "csv"},
+   # "NONFARM_PAYROLL": {"datatype": "csv"},
 }
 
 ALPHA_VANTAGE_SCHEMA = {
@@ -300,20 +301,61 @@ CREATE TABLE HISTORICAL_OPTIONS (
     vega DECIMAL(20, 5),
     rho DECIMAL(20, 5)
 );""",
+    "OVERVIEW": """
+CREATE TABLE OVERVIEW (
+    Symbol TEXT,
+    AssetType TEXT,
+    Name TEXT,
+    Description TEXT,
+    CIK TEXT,
+    Exchange TEXT,
+    Currency TEXT,
+    Country TEXT,
+    Sector TEXT,
+    Industry TEXT,
+    Address TEXT,
+    FiscalYearEnd TEXT,
+    LatestQuarter DATE,
+    MarketCapitalization BIGINT,
+    EBITDA BIGINT,
+    PERatio DECIMAL(20, 4),
+    PEGRatio DECIMAL(20, 4),
+    BookValue DECIMAL(20, 4),
+    DividendPerShare DECIMAL(20, 4),
+    DividendYield DECIMAL(20, 4),
+    EPS DECIMAL(20, 4),
+    RevenuePerShareTTM DECIMAL(20, 4),
+    ProfitMargin DECIMAL(20, 4),
+    OperatingMarginTTM DECIMAL(20, 4),
+    ReturnOnAssetsTTM DECIMAL(20, 4),
+    ReturnOnEquityTTM DECIMAL(20, 4),
+    RevenueTTM BIGINT,
+    GrossProfitTTM BIGINT,
+    DilutedEPSTTM DECIMAL(20, 4),
+    QuarterlyEarningsGrowthYOY DECIMAL(20, 4),
+    QuarterlyRevenueGrowthYOY DECIMAL(20, 4),
+    AnalystTargetPrice DECIMAL(20, 4),
+    TrailingPE DECIMAL(20, 4),
+    ForwardPE DECIMAL(20, 4),
+    PriceToSalesRatioTTM DECIMAL(20, 4),
+    PriceToBookRatio DECIMAL(20, 4),
+    EVToRevenue DECIMAL(20, 4),
+    EVToEBITDA DECIMAL(20, 4),
+    Beta DECIMAL(20, 4),
+    "52WeekHigh" DECIMAL(20, 4),
+    "52WeekLow" DECIMAL(20, 4),
+    "50DayMovingAverage" DECIMAL(20, 4),
+    "200DayMovingAverage" DECIMAL(20, 4),
+    SharesOutstanding BIGINT,
+    DividendDate DATE,
+    ExDividendDate DATE,
+    dt TIMESTAMP
+);"""
 }
 
 BASE_URL = "https://www.alphavantage.co/query"
 
-SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v]
-
-MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
-
-FUNDAMENTAL_ENDPOINTS = [
-    "INCOME_STATEMENT",
-    "BALANCE_SHEET",
-    "CASH_FLOW",
-    "EARNINGS"
-]
+FUNDAMENTAL_ENDPOINTS = ["INCOME_STATEMENT","BALANCE_SHEET","CASH_FLOW","EARNINGS"]
 
 PREMIUM_ENDPOINTS = [
    "TIME_SERIES_DAILY_ADJUSTED", "REALTIME_BULK_QUOTES", "REALTIME_OPTIONS",
@@ -321,8 +363,11 @@ PREMIUM_ENDPOINTS = [
    "ANALYTICS_SLIDING_WINDOW", "VWAP", "MACD"
 ]
 
+SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v or "Symbol" in v]
+
+MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
+
 # Map endpoints to their tables
-# Default: START -> START (Current logic uses endpoint.upper())
 ENDPOINT_TO_TABLE_MAP = {}
 
 # 1. Macro Endpoints -> MACRO table
@@ -335,3 +380,34 @@ for endpoint in SYMBOL_ENDPOINTS:
         ENDPOINT_TO_TABLE_MAP[endpoint] = "FUNDAMENTALS"
     else:
         ENDPOINT_TO_TABLE_MAP[endpoint] = endpoint
+
+def get_numeric_columns(table_name: str) -> list[str]:
+    """
+    Parses the SQL schema for the given table and returns a list of column names
+    that should be treated as numeric (DECIMAL, INT, BIGINT, FLOAT).
+    """
+    if table_name not in TABLE_SCHEMAS:
+        return []
+
+    schema_sql = TABLE_SCHEMAS[table_name]
+    numeric_cols = []
+    
+    # Simple parsing of the CREATE TABLE statement
+    # We look for lines like "column_name TYPE,"
+    for line in schema_sql.splitlines():
+        line = line.strip()
+        if not line or line.startswith("CREATE TABLE") or line.startswith(");"):
+            continue
+            
+        # Remove trailing comma and comments
+        line = line.split(",")[0].split("--")[0].strip()
+        
+        parts = line.split()
+        if len(parts) >= 2:
+            col_name = parts[0].strip('"') # Handle quoted identifiers
+            col_type = parts[1].upper()
+            
+            if any(x in col_type for x in ["DECIMAL", "INT", "BIGINT", "FLOAT", "DOUBLE", "REAL", "NUMERIC"]):
+                numeric_cols.append(col_name)
+                
+    return numeric_cols

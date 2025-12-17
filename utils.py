@@ -1,10 +1,12 @@
 """
 Utility functions for Alpha Vantage data processing.
 """
-
 import pandas as pd
 import duckdb
+from duckdb import DuckDBPyConnection
 from typing import List, Dict, Optional, Union
+from pathlib import Path
+from datetime import datetime
 import logging
 from settings import settings
 import alpha_vantage_schema as avs
@@ -86,6 +88,98 @@ def generate_filepath(data_dir: str, endpoint_name: str, params: Dict) -> Path:
    path = data_dir / "files" / endpoint_name / filename
 
    return path
+
+def get_latest_date_from_db(conn: DuckDBPyConnection, endpoint_name: str, params: Dict) -> Optional[datetime]:
+    """
+    Gets the latest date available for a given endpoint/symbol from the DB.
+    """
+    table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+
+    if table_name == "MACRO":
+        col_name = endpoint_name.lower()
+        query = f"SELECT MAX(dt) as max_dt FROM {table_name} WHERE {col_name} IS NOT NULL"
+    else:
+        if "symbol" in params:
+            symbol = params["symbol"]
+            query = f"SELECT MAX(dt) as max_dt FROM {table_name} WHERE symbol = '{symbol}'"
+        else:
+            return None
+
+    should_close = conn is None
+    try:
+        df = conn.execute(query).df()
+        if not df.empty and df["max_dt"].iloc[0] is not None:
+            return pd.to_datetime(df["max_dt"].iloc[0])
+        return None
+    except Exception:
+        return None
+    finally:
+        if should_close:
+            conn.close()
+
+def get_exchange_timezone(conn: DuckDBPyConnection, symbol: str) -> str:
+   """
+   Determine the timezone for a symbol based on its Exchange in OVERVIEW.
+   Defaults to 'US/Eastern'.
+   """
+   try:
+         # Check cache/DB for Overview
+         res = conn.execute(f"SELECT Exchange, Currency FROM OVERVIEW WHERE Symbol = '{symbol}'").df()
+         if not res.empty:
+            exchange = res.iloc[0]["Exchange"]
+            
+            # Load mappings from settings
+            tz_map = settings.get("exchange_timezones", {})
+            for tz, exchanges in tz_map.items():
+               if exchange in exchanges:
+                     return tz
+                     
+         return "US/Eastern" # Default
+   except Exception:
+         return "US/Eastern"
+    
+def get_from_db(conn: DuckDBPyConnection, endpoint_name: str, params: Dict) -> pd.DataFrame:
+   """
+   Attempts to retrieve data from the database.
+   """
+   # Determine table name
+   table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper() # Default to self-named table
+   
+   if table_name == "MACRO":
+      col_name = endpoint_name.lower()
+      query = f"SELECT dt, {col_name} FROM {table_name} WHERE {col_name} IS NOT NULL ORDER BY dt DESC"
+   else:
+      if "symbol" in params:
+            symbol = params["symbol"]
+            query = f"SELECT * FROM {table_name} WHERE symbol = '{symbol}'"
+            if "date" in params:
+               query += f" AND CAST(dt AS DATE) = '{params['date']}'"
+            query += " ORDER BY dt DESC"
+      else:
+            # Default fallback (might be too broad, but fits current schema usage)
+            query = f"SELECT * FROM {table_name}"
+            if "date" in params:
+               query += f" WHERE CAST(dt AS DATE) = '{params['date']}'"
+            query += " ORDER BY dt DESC"
+
+   should_close = conn is None
+
+   try:
+      # Check if table exists first prevents some error logs
+      # but simpler to just try/except execution
+      df = conn.execute(query).df()
+      if not df.empty:
+            # Restore index
+            if "dt" in df.columns:
+               df = df.assign(dt=pd.to_datetime(df["dt"]))
+               df.set_index("dt", inplace=True)
+
+      return df
+   except Exception:
+      # Likely table doesn't exist or column missing
+      return pd.DataFrame()
+      if should_close:
+            conn.close()
 
 def get_dataset(sql_query: str, db_path: str) -> pd.DataFrame:
    """

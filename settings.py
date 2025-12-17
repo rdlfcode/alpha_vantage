@@ -6,8 +6,11 @@ settings = {
    ######### ALPHA VANTAGE #########
    "AlphaVantageRPM": 75,
    "AlphaVantageRPD": 1000000,
-   "AlphaVantagePremium": True,
-   "MAX_CONCURRENT_REQUESTS": 1,
+   "MaxConcurrentRequests": 1,
+   "exchange_timezones": {
+        "US/Eastern": ["NYSE", "NASDAQ", "NASDAQ NMSC", "AMEX", "BATS"],
+        "Europe/London": ["LSE"],
+   },
    ######### LOGGING ###############
    "logging": {
       "filename": "av.log",
@@ -15,3 +18,5 @@ settings = {
       "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
    },
 }
+
+settings.update({"AlphaVantagePremium": settings.get("AlphaVantageRPD", 25) > 25})

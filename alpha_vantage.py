@@ -4,7 +4,6 @@ Alpha Vantage Client
 A comprehensive client for interacting with the Alpha Vantage API.
 Handles data fetching, parsing, caching, and rate limiting in a unified interface.
 """
-import utils
 import os
 import time
 import requests
@@ -19,7 +18,8 @@ from typing import Optional, Dict, List, Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from dotenv import load_dotenv
-from utils import read_stock_symbols, get_endpoints
+
+import utils
 from rate_limiter import RateLimiter
 from settings import settings
 from alpha_vantage_schema import (
@@ -33,31 +33,6 @@ from alpha_vantage_schema import (
 
 # Load environment variables
 load_dotenv()
-
-# =============================================================================
-# LOGGING SETUP
-# =============================================================================
-log_settings = settings.get("logging", {})
-# Remove filename from basicConfig if we want custom handlers effectively mixed?
-# Actually basicConfig is fine, but we might want to ensure TQDM plays nice.
-# For now, let's keep basicConfig but add a specific handler class.
-
-class TqdmLoggingHandler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
-        super().__init__(level)
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            tqdm.write(msg)
-            self.flush()
-        except Exception:
-            self.handleError(record)
-
-# Only add TqdmHandler if not already there to avoid dupes on re-run
-has_tqdm_handler = any(isinstance(h, TqdmLoggingHandler) for h in logging.getLogger().handlers)
-if not has_tqdm_handler:
-    logging.getLogger().addHandler(TqdmLoggingHandler())
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +54,11 @@ class AlphaVantageClient:
         Initialize the Alpha Vantage client.
 
         Args:
-           api_key: Alpha Vantage API key. If None, will try to get from environment.
-           data_dir: Directory for caching data files
-           db_conn: Optional DuckDB connection object or path to SQLite database for data storage
-           requests_per_minute: Rate limit for requests per minute
-           requests_per_day: Rate limit for requests per day
+           api_key: Alpha Vantage API key.
+           data_dir: Directory for caching data files.
+           db_conn: DuckDB connection or path to database.
+           requests_per_minute: Rate limit per minute.
+           requests_per_day: Rate limit per day.
         """
         self.api_key = api_key or os.getenv("ALPHA_VANTAGE_API_KEY")
         if not self.api_key:
@@ -91,13 +66,11 @@ class AlphaVantageClient:
                 "API key is required. Set ALPHA_VANTAGE_API_KEY environment variable or pass api_key parameter."
             )
 
-        # Use settings with fallbacks
         rpm = requests_per_minute or settings.get("AlphaVantageRPM", 75)
         rpd = requests_per_day or settings.get("AlphaVantageRPD", 25)
         self.rate_limiter = RateLimiter(requests_per_minute=rpm, requests_per_day=rpd)
         self.logger = logger
 
-        # Ensure data directory exists
         self.data_dir = Path(data_dir or settings.get("data_dir", "data"))
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -108,9 +81,7 @@ class AlphaVantageClient:
         else:
             self.conn = duckdb.connect(settings.get("db_path", "data/alpha_vantage.db"))
 
-    def _fetch_data(
-        self, endpoint_name: str, params: Dict
-    ) -> Optional[Union[Dict, str, None]]:
+    def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str, None]]:
         """
         Fetches data from a single Alpha Vantage endpoint.
 
@@ -143,27 +114,20 @@ class AlphaVantageClient:
                 data = response.text
                 is_json = False
 
-            # Check for API errors/notes in JSON structure
             if is_json and isinstance(data, dict):
-                # Check for rate limit specific messages
-                # Messages can be in "Information" or "Note"
                 msg_val = data.get("Information", "") or data.get("Note", "") or data.get("Error Message", "")
                 
                 if msg_val:
-                    # Check for Daily limit
                     if "standard API rate limit" in str(msg_val) and "requests per day" in str(msg_val):
-                        self.logger.warning("Daily API rate limit reached (detected from API response).")
+                        self.logger.warning("Daily API rate limit reached.")
                         self.rate_limiter.set_daily_limit_reached()
                         return None
                     
-                    # Check for RPM limit hint
                     if "consider spreading out your free API requests" in str(msg_val) or "Burst pattern detected" in str(msg_val):
-                        self.logger.warning("API rate limit hint received (RPM). Sleeping 60s and retrying.")
+                        self.logger.warning("API rate limit hint received (RPM). Sleeping 60s.")
                         time.sleep(60)
                         return self._fetch_data(endpoint_name, params)
 
-                    # Any other Information/Note/Error at top level is likely an error or blocking note
-                    # (Meta Data 'Information' is NOT at top level, so this is safe)
                     self.logger.warning(
                         f"API returned an error or note for {endpoint_name}: {msg_val}"
                     )
@@ -195,9 +159,7 @@ class AlphaVantageClient:
             self.logger.error(f"Error fetching data for {endpoint_name}: {e}")
             return None
 
-    def _parse_response(
-        self, endpoint_name: str, data: Optional[Union[Dict, str]], params: Dict
-    ) -> pd.DataFrame:
+    def _parse_response(self, endpoint_name: str, data: Optional[Union[Dict, str]], params: Dict) -> pd.DataFrame:
         """
         Parses the raw API response into a pandas DataFrame.
 
@@ -312,8 +274,29 @@ class AlphaVantageClient:
                     df = pd.DataFrame(records)
                     
                 else:
-                    # Fallback for other structures
+                    # Fallback for other structures (e.g. OVERVIEW)
                     df = pd.DataFrame([data])
+                    
+                    # Clean "None", "-", "0000-00-00" before standardizing
+                    df.replace(["None", "none", "-", "0000-00-00"], [None, None, None, None], inplace=True)
+                    
+                    # Add timestamp for point-in-time reference if missing
+                    if "dt" not in df.columns:
+                        df["dt"] = pd.Timestamp.now("UTC")
+                        
+                    if "dt" not in df.columns:
+                        df["dt"] = pd.Timestamp.now("UTC")
+                        
+                    # Standardize numeric columns based on schema
+                    # This prevents "Conversion Error" in DuckDB when it expects specific types
+                    table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+                    numeric_cols = avs.get_numeric_columns(table_name)
+                    
+                    for col in numeric_cols:
+                        if col in df.columns:
+                            # Force Coerce keys that are supposed to be numeric
+                            # This handles "None", "-", empty strings, etc. by turning them into NaN
+                            df[col] = pd.to_numeric(df[col], errors='coerce')
 
             # Standardize datetime column
             for col_name in [
@@ -337,7 +320,6 @@ class AlphaVantageClient:
                 "acquisition_or_disposal": "transactionType",
                 "share_price": "price"
             }
-            # Only rename if columns exist
             df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
 
             if "dt" in df.columns:
@@ -354,78 +336,44 @@ class AlphaVantageClient:
             self.logger.error(f"Error parsing data for {endpoint_name}: {e}")
             return pd.DataFrame()
 
-        return df
-        
-    def _get_from_db(self, endpoint_name: str, params: Dict) -> pd.DataFrame:
-        """
-        Attempts to retrieve data from the database.
-        """
-        # Determine table name
-        table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper() # Default to self-named table
-        
-        if table_name == "MACRO":
-            col_name = endpoint_name.lower()
-            query = f"SELECT dt, {col_name} FROM {table_name} WHERE {col_name} IS NOT NULL ORDER BY dt DESC"
-        else:
-            if "symbol" in params:
-                symbol = params["symbol"]
-                query = f"SELECT * FROM {table_name} WHERE symbol = '{symbol}'"
-                if "date" in params:
-                     query += f" AND CAST(dt AS DATE) = '{params['date']}'"
-                query += " ORDER BY dt DESC"
-            else:
-                # Default fallback (might be too broad, but fits current schema usage)
-                query = f"SELECT * FROM {table_name}"
-                if "date" in params:
-                     query += f" WHERE CAST(dt AS DATE) = '{params['date']}'"
-                query += " ORDER BY dt DESC"
-
-        should_close = self.conn is None
-
-        try:
-            # Check if table exists first prevents some error logs
-            # but simpler to just try/except execution
-            df = self.conn.execute(query).df()
-            if not df.empty:
-                # Restore index
-                if "dt" in df.columns:
-                    df = df.assign(dt=pd.to_datetime(df["dt"]))
+        # ENSURE UTC
+        if not df.empty and "dt" in df.columns:
+            try:
+                # If naive, assume it depends on endpoint, but for simplicity/safety we treat US stocks as Eastern -> UTC
+                # However, usually just strictly forcing UTC is what's requested.
+                # If it's already TZ-aware, convert to UTC. If naive, assume UTC or localize then convert.
+                # Given user request: "ensure... stored on UTC"
+                # Let's standardize on UTC.
+                
+                # Heuristic: If naive, assume US/Eastern for stocks, else UTC? 
+                # Or just force everything to UTC for storage uniformity.
+                # For now, we will perform a simple conversion.
+                if df["dt"].dt.tz is None:
+                    # Naive
+                    # We could try to be smart with Symbol/Exchange if available, but that requires lookups.
+                    # Defaulting to treating as UTC-compatible or just standardizing without shift if dates are dates.
+                    # For Intraday (which has time), it matters.
+                    # Alpha Vantage Daily is YYYY-MM-DD (naive).
+                    # Alpha Vantage Intraday is YYYY-MM-DD HH:MM:SS (in EDT/EST usually).
+                    
+                    if endpoint_name == "TIME_SERIES_INTRADAY":
+                         # Localize as ET then convert to UTC
+                         df["dt"] = df["dt"].dt.tz_localize("US/Eastern", ambiguous="infer").dt.tz_convert("UTC")
+                    else:
+                         # Daily or others - treat as UTC midnight or just keep date?
+                         # User wants UTC.
+                         df["dt"] = df["dt"].dt.tz_localize("UTC")
+                else:
+                    df["dt"] = df["dt"].dt.tz_convert("UTC")
+                
+                # Re-set index if it was dt
+                if df.index.name == "dt":
                     df.set_index("dt", inplace=True)
+                    
+            except Exception as utc_err:
+                 self.logger.warning(f"Could not convert dt to UTC: {utc_err}")
 
-            return df
-        except Exception:
-            # Likely table doesn't exist or column missing
-            return pd.DataFrame()
-            if should_close:
-                self.conn.close()
-
-    def _get_latest_date_from_db(self, endpoint_name: str, params: Dict) -> Optional[datetime]:
-        """
-        Gets the latest date available for a given endpoint/symbol from the DB.
-        """
-        table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-
-        if table_name == "MACRO":
-            col_name = endpoint_name.lower()
-            query = f"SELECT MAX(dt) as max_dt FROM {table_name} WHERE {col_name} IS NOT NULL"
-        else:
-            if "symbol" in params:
-                symbol = params["symbol"]
-                query = f"SELECT MAX(dt) as max_dt FROM {table_name} WHERE symbol = '{symbol}'"
-            else:
-                return None
-
-        should_close = self.conn is None
-        try:
-            df = self.conn.execute(query).df()
-            if not df.empty and df["max_dt"].iloc[0] is not None:
-                return pd.to_datetime(df["max_dt"].iloc[0])
-            return None
-        except Exception:
-            return None
-        finally:
-            if should_close:
-                self.conn.close()
+        return df
 
     def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
         """
@@ -439,146 +387,100 @@ class AlphaVantageClient:
         should_close = False
 
         try:
-            # Prepare dataframe for insertion
             df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
-
-            # Identify target table name
             table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
 
+            # 1. Ensure Table Exists
+            try:
+                # Check if table exists
+                tbl_exists = conn.execute(
+                    f"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '{table_name}'"
+                ).fetchone()[0] > 0
+                
+                if not tbl_exists:
+                    # Create table
+                    schema_key = table_name if table_name in ["MACRO", "FUNDAMENTALS"] else endpoint_name
+                    schema_sql = TABLE_SCHEMAS.get(schema_key)
+                    if not schema_sql and table_name == "MACRO":
+                        schema_sql = TABLE_SCHEMAS.get("MACRO")
+                    
+                    if schema_sql:
+                        conn.execute(schema_sql)
+                    else:
+                        self.logger.error(f"No schema found for {endpoint_name} (Table: {table_name})")
+                        return
+            except Exception as e:
+                self.logger.error(f"Error checking/creating table {table_name}: {e}")
+                return
+
+            # 2. Prepare Data (Rename/Delete overlaps)
             if table_name == "MACRO":
                 col_name = endpoint_name.lower()
-
-                # Check if we need to rename the value column
-                # Typically macro responses have 'value' or similar.
-                # Let's inspect columns. If specific col_name not present, assume the first numeric/value column is it.
                 if col_name not in df_to_save.columns:
-                  # Find a suitable column to map
-                  candidates = [
-                     c for c in df_to_save.columns if c not in ["dt", "date"]
-                  ]
-                  if candidates:
-                     df_to_save.rename(
-                           columns={candidates[0]: col_name}, inplace=True
-                     )
+                    # heuristics to find value column
+                    candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
+                    if candidates:
+                        df_to_save.rename(columns={candidates[0]: col_name}, inplace=True)
 
-                # We only want to insert dt and the specific value column
-                # This might result in separate rows for separate indicators given the simple Schema
                 if col_name in df_to_save.columns and "dt" in df_to_save.columns:
-                    # Construct a specialized insert
-                    # Since we can't easily do partial column insert via "BY NAME" if other columns are missing from DF
-                    # (DuckDB BY NAME expects matching columns, might error on missing ones if not nullable? No, standard SQL allows missing cols if nullable)
-                    # But 'BY NAME' uses the dataframe columns.
-                    # So we filter df_to_save to just [dt, col_name]
                     df_subset = df_to_save[["dt", col_name]]
-                    
-                    # Delete overlaps first
                     if not df_subset.empty:
                         min_dt = df_subset["dt"].min()
                         max_dt = df_subset["dt"].max()
                         conn.execute(
                             f"DELETE FROM {table_name} WHERE {col_name} IS NOT NULL AND dt >= '{min_dt}' AND dt <= '{max_dt}'"
                         )
-                        
-                    conn.execute(
-                        f"INSERT INTO {table_name} BY NAME SELECT * FROM df_subset"
-                    )
+                    
+                    df_to_save = df_subset
                 else:
                     self.logger.warning(f"Could not map columns for MACRO table insert: {df_to_save.columns}")
                     return
             else:
-                # Delete overlaps first
+                # Delete overlaps
                 if "dt" in df_to_save.columns:
                     min_dt = df_to_save["dt"].min()
                     max_dt = df_to_save["dt"].max()
                     
-                    # If duplicate symbols exist in a generic table, refine delete by symbol
                     symbol_clause = ""
                     if "symbol" in df_to_save.columns:
-                        symbol_val = df_to_save["symbol"].iloc[0] # Assume same symbol per batch usually
+                        symbol_val = df_to_save["symbol"].iloc[0]
                         symbol_clause = f"AND symbol = '{symbol_val}'"
                     
-                    # Special handling for FUNDAMENTALS: only delete for specific report_type
                     report_type_clause = ""
                     if table_name == "FUNDAMENTALS" and "report_type" in df_to_save.columns:
-                        # Assume one report type per save batch (safe for single endpoint call)
                         report_type_val = df_to_save["report_type"].iloc[0]
                         report_type_clause = f"AND report_type = '{report_type_val}'"
 
                     conn.execute(
                         f"DELETE FROM {table_name} WHERE dt >= '{min_dt}' AND dt <= '{max_dt}' {symbol_clause} {report_type_clause}"
                     )
-                
-                # Filter columns to match table schema to avoid Binder Error on extra columns
-                try:
-                    db_cols_df = conn.execute(f"PRAGMA table_info('{table_name}')").df()
-                    if not db_cols_df.empty:
-                        valid_cols_set = set(db_cols_df['name'].tolist())
-                        
-                        # Deduplicate DF columns
-                        df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
-                        
-                        # Filter to valid cols
-                        existing_cols = [c for c in df_to_save.columns if c in valid_cols_set]
-                        if existing_cols:
-                            df_to_save = df_to_save[existing_cols]
-                        else:
-                            self.logger.warning(f"No matching columns for {table_name} after filtering. Skipping.")
-                            return
-                except Exception as filter_err:
-                    self.logger.warning(f"Error filtering columns for {table_name}: {filter_err}")
-                
-                conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
 
-            self.logger.info(f"Saved {len(df)} rows to {table_name}")
+            # 3. Filter Columns and Insert
+            try:
+                # Get valid columns for the table
+                db_cols_df = conn.execute(f"PRAGMA table_info('{table_name}')").df()
+                if not db_cols_df.empty:
+                    valid_cols_set = set(db_cols_df['name'].tolist())
+                    
+                    # Deduplicate DF columns
+                    df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
+                    
+                    # Filter
+                    existing_cols = [c for c in df_to_save.columns if c in valid_cols_set]
+                    if existing_cols:
+                        df_to_save = df_to_save[existing_cols]
+                        conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
+                        self.logger.info(f"Saved {len(df_to_save)} rows to {table_name}")
+                    else:
+                        self.logger.warning(f"No matching columns for {table_name} after filtering.")
+                else:
+                    self.logger.error(f"Could not get schema info for {table_name}")
+
+            except Exception as insert_err:
+                self.logger.error(f"Error inserting into {table_name}: {insert_err}")
 
         except Exception as e:
-            # Handle missing table
-            if isinstance(e, duckdb.CatalogException) or "does not exist" in str(e):
-                try:
-                    # Create table
-                    # Use table name to look up schema if key matches, OR endpoint name?
-                    # The schemas are keyed by ENDPOINT usually, except MACRO.
-                    # Mappings: 
-                    # MACRO -> MACRO
-                    # TIME_SERIES_DAILY -> TIME_SERIES_DAILY
-                    # HISTORICAL_OPTIONS -> HISTORICAL_OPTIONS
-                    
-                    # If table_name is MACRO, we use MACRO schema.
-                    # Otherwise, table definition usually matches the table name (which is endpoint name).
-                    
-                    schema_key = table_name if table_name in ["MACRO", "FUNDAMENTALS"] else endpoint_name
-                    schema_sql = TABLE_SCHEMAS.get(schema_key)
-                    
-                    if not schema_sql and table_name == "MACRO": 
-                        schema_sql = TABLE_SCHEMAS.get("MACRO") # fallback
-
-                    if schema_sql:
-                        conn.execute(schema_sql)
-                        # Retry insert (recursive call? or just copy logic)
-                        # Let's just retry the execute logic
-                        if table_name == "MACRO":
-                            col_name = endpoint_name.lower()
-                            if col_name in df_to_save.columns:
-                                df_subset = df_to_save[["dt", col_name]]
-                                conn.execute(
-                                    f"INSERT INTO {table_name} BY NAME SELECT * FROM df_subset"
-                                )
-                        else:
-                            conn.execute(
-                                f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save"
-                            )
-
-                        self.logger.info(
-                            f"Created table and saved {len(df)} rows to {table_name}"
-                        )
-                    else:
-                        self.logger.error(f"No schema found for {endpoint_name}")
-                except Exception as create_error:
-                    self.logger.error(
-                        f"Error creating table/saving for {endpoint_name}: {create_error}"
-                    )
-            else:
-                self.logger.error(f"Error saving to database for {endpoint_name}: {e}")
+            self.logger.error(f"Error save flow for {endpoint_name}: {e}")
 
         finally:
             if should_close:
@@ -587,18 +489,32 @@ class AlphaVantageClient:
     def fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False, min_required_date: Optional[datetime] = None) -> pd.DataFrame:
         """
         Fetches, parses, and caches data for a single endpoint call.
-        Checks DB first, then falls back to API.
+        Checks DB first, then falls back to Parquet cache, then API.
+
+        Args:
+            endpoint_name: API endpoint function name.
+            params: Parameters for the API call.
+            force_refresh: If True, skip DB/Cache and fetch from API.
+            min_required_date: If cached data is older than this, fetch fresh.
+
+        Returns:
+            DataFrame containing the requested data.
         """
         if not force_refresh:
-            # 1. Try DB first if not forcing refresh
-            df = self._get_from_db(endpoint_name, params)
+            # 1. Try DB first
+            df = utils.get_from_db(self.conn, endpoint_name, params)
             if not df.empty:
-                # Check if data is fresh enough (if min_required_date is set)
                 if min_required_date:
                     latest_dt = df.index.max()
+                    # Ensure timezone awareness for comparison
+                    if latest_dt.tz is None:
+                        latest_dt = latest_dt.tz_localize("UTC")
+                    else:
+                        latest_dt = latest_dt.tz_convert("UTC")
+                        
                     if latest_dt < min_required_date:
-                        self.logger.info(f"Data for {endpoint_name} is stale (latest: {latest_dt}, required: {min_required_date}). Fetching fresh...")
-                        df = pd.DataFrame() # Trigger fetch
+                        self.logger.info(f"Data for {endpoint_name} is stale (latest: {latest_dt}). Fetching fresh...")
+                        df = pd.DataFrame()
                     else:
                         self.logger.info(f"Loaded {len(df)} rows from database for {endpoint_name}")
                         return df
@@ -606,13 +522,13 @@ class AlphaVantageClient:
                     self.logger.info(f"Loaded {len(df)} rows from database for {endpoint_name}")
                     return df
 
-            # 1.5 Try Parquet Cache (Fallback if DB miss)
+            # 2. Try Parquet Cache
             filepath = utils.generate_filepath(self.data_dir, endpoint_name, params)
             if filepath.exists():
                 try:
                     df = pd.read_parquet(filepath, engine='pyarrow')
                     self.logger.info(f"Loading from cache: {filepath}")
-                    # Ensure index is set if it was reset
+                    
                     if "dt" in df.columns:
                         df["dt"] = pd.to_datetime(df["dt"])
                         df.set_index("dt", inplace=True)
@@ -624,9 +540,14 @@ class AlphaVantageClient:
                         elif "dt" in df.columns:
                             latest_dt = pd.to_datetime(df["dt"]).max()
                         
+                        if latest_dt:
+                            if latest_dt.tz is None:
+                                latest_dt = latest_dt.tz_localize("UTC")
+                            else:
+                                latest_dt = latest_dt.tz_convert("UTC")
+
                         if latest_dt and latest_dt < min_required_date:
-                            self.logger.info(f"Cached data for {endpoint_name} is stale (latest: {latest_dt}, required: {min_required_date}). Fetching fresh...")
-                            # Don't return, let it fall through to API fetch
+                            self.logger.info(f"Cached data is stale (latest: {latest_dt}). Fetching fresh...")
                         else:
                             return df
                     else:
@@ -656,6 +577,51 @@ class AlphaVantageClient:
 
         return df
 
+    def _should_fetch(self, symbol: str, endpoint: str, params: Dict) -> bool:
+        """
+        Check if we should fetch data based on existing data freshness and market status.
+
+        Args:
+            symbol: Stock symbol.
+            endpoint: API endpoint name.
+            params: Query parameters.
+
+        Returns:
+            True if data should be fetched, False otherwise.
+        """
+        try:
+            # 1. Get latest date from DB
+            latest_dt = utils.get_latest_date_from_db(self.conn, endpoint, params)
+            if not latest_dt:
+                return True # No data, must fetch
+
+            # 2. Determine comparison time (Current time in Market Timezone)
+            tz_str = utils.get_exchange_timezone(self.conn, symbol)
+            try:
+                # We need a timezone aware current time
+                # Using pandas for easy timezone handling
+                now_utc = pd.Timestamp.now("UTC")
+                now_market = now_utc.tz_convert(tz_str)
+                
+                if latest_dt.tz is None:
+                    latest_dt = latest_dt.tz_localize("UTC")
+                
+                latest_market = latest_dt.tz_convert(tz_str)
+
+                # Check if data is up to date (e.g. daily data fetch once per day)
+                if "DAILY" in endpoint:
+                    if latest_market.date() >= now_market.date():
+                        self.logger.info(f"Data for {symbol} ({endpoint}) is up to date. Skipping.")
+                        return False
+                
+            except Exception as e:
+                self.logger.warning(f"Error in smart update check: {e}. Defaulting to fetch.")
+                return True
+                
+            return True
+        except Exception:
+            return True
+
     def get_data(
         self,
         symbols: Optional[List[str]] = None,
@@ -666,56 +632,64 @@ class AlphaVantageClient:
     ) -> pd.DataFrame:
         """
         Fetches, parses, and caches data for given symbols and endpoints.
-        Gets all data by default.
-
+        
         Args:
-           symbols: List of stock symbols.
-           endpoints: Dictionary of endpoint configurations.
-           start_date: Start date for filtering (YYYY-MM-DD).
-           end_date: End date for filtering (YYYY-MM-DD).
-           force_refresh: If True, bypass cache and fetch fresh data.
+            symbols: List of stock symbols to fetch. Defaults to reading stocks.txt.
+            endpoints: Dictionary of endpoints and parameters. Defaults to default endpoints.
+            start_date: Start date for time series data.
+            end_date: End date for time series data.
+            force_refresh: If True, force fetch from API.
 
         Returns:
-           A combined DataFrame with all requested data.
+            Combined DataFrame with all data.
         """
         try:
-            symbols = symbols or read_stock_symbols()
-            endpoints = endpoints or get_endpoints()
+            symbols = symbols or utils.read_stock_symbols()
+            endpoints = endpoints or utils.get_endpoints()
             end_date = end_date or datetime.now().strftime("%Y-%m-%d")
             start_date = start_date or (pd.to_datetime(end_date) - pd.DateOffset(years=15)).strftime("%Y-%m-%d")
 
             # --- Build Task List ---
             tasks = []
-
+            
             # 1. Symbol-specific tasks
             symbol_endpoints = {
                 k: v for k, v in endpoints.items() if k in SYMBOL_ENDPOINTS
             }
+            
             for symbol in symbols:
                 for endpoint_name, params in symbol_endpoints.items():
-                    # Create a copy of params to avoid modifying the original dict
+                    # Create a copy of params
                     task_params = params.copy()
                     task_params["symbol"] = symbol
                     
+                    if not self._should_fetch(symbol, endpoint_name, task_params) and not force_refresh:
+                        continue
+
                     if "date" in params.keys():
-                        # Determine date range
+                        # ... (Existing Date Logic - could be optimized similarly but leaving as involves sub-dates)
+                         # Determine date range
                         s_date = pd.to_datetime(start_date)
                         e_date = pd.to_datetime(end_date)
                         
-                        # Get existing dates from DB to avoid redundant fetches
                         try:
                             table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-                            # Efficiently query just the dates
                             existing_df = self.conn.execute(f"SELECT DISTINCT dt FROM {table_name} WHERE symbol = '{symbol}' ORDER BY dt").df()
                             if not existing_df.empty:
-                                existing_dates = pd.to_datetime(existing_df['dt']).dt.normalize()
+                                existing_dates = pd.to_datetime(existing_df['dt']).dt.normalize() # Ensure normalize
+                                if existing_dates.tz:
+                                     existing_dates = existing_dates.tz_convert(None) # removing tz for comparison with simple range
                             else:
                                 existing_dates = pd.Index([])
                         except Exception:
-                            # Table might not exist yet
                             existing_dates = pd.Index([])
 
                         full_range = pd.date_range(start=s_date, end=e_date)
+                        
+                        # Normalize full_range
+                        full_range = full_range.normalize()
+                        
+                        # Set operation
                         needed_dates = full_range.difference(existing_dates)
                         
                         for date in needed_dates:
@@ -730,6 +704,8 @@ class AlphaVantageClient:
                 k: v for k, v in endpoints.items() if k in MACRO_ENDPOINTS
             }
             for endpoint_name, params in macro_endpoints_map.items():
+                if not self._should_fetch("MACRO", endpoint_name, params) and not force_refresh:
+                    continue
                 tasks.append((endpoint_name, params))
 
             return self._execute_tasks(tasks, force_refresh, start_date, end_date)
@@ -746,17 +722,26 @@ class AlphaVantageClient:
         end_date: Optional[str] = None
     ) -> pd.DataFrame:
         """
-        Internal helper to execute a list of tasks concurrently with tqdm.
+        Internal helper to execute a list of tasks concurrently.
+
+        Args:
+            tasks: List of (endpoint_name, params) tuples.
+            force_refresh: Force refresh flag.
+            start_date: Optional start date filter.
+            end_date: Optional end date filter.
+
+        Returns:
+            Concatenated DataFrame.
         """
         if not tasks:
             return pd.DataFrame()
 
-        max_workers = settings.get("MAX_CONCURRENT_REQUESTS", 5)
+        max_workers = settings.get("MaxConcurrentRequests", 5)
         all_dfs = []
         
         self.logger.info(f"Starting execution of {len(tasks)} tasks with {max_workers} workers.")
 
-        min_required_datetime = pd.to_datetime(end_date) if end_date else None
+        min_required_datetime = pd.to_datetime(end_date).tz_localize("UTC") if end_date else None
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Map futures to tasks
@@ -796,32 +781,65 @@ class AlphaVantageClient:
         self.logger.info("Concatenating results...")
         combined_df = pd.concat(all_dfs, sort=False)
 
-        # Filter by date range if specified
+        # Standardize index to UTC DatetimeIndex if "dt" is the index name
+        # This handles mixed naive/aware inputs from cache vs API
         if "dt" in combined_df.index.names:
+            try:
+                # Ensure it's datetime
+                if not isinstance(combined_df.index, pd.DatetimeIndex):
+                    combined_df.index = pd.to_datetime(combined_df.index, utc=True)
+                
+                # If it's already DatetimeIndex, ensure it is UTC
+                if combined_df.index.tz is None:
+                    combined_df.index = combined_df.index.tz_localize("UTC")
+                else:
+                    combined_df.index = combined_df.index.tz_convert("UTC")
+            except Exception as e:
+                self.logger.warning(f"Failed to normalize index: {e}")
+
+            # Filter by date range if specified
             if start_date:
-                combined_df = combined_df[combined_df.index >= start_date]
+                # Ensure start_date is a comparable timestamp (UTC)
+                start_dt = pd.to_datetime(start_date)
+                if start_dt.tz is None:
+                    start_dt = start_dt.tz_localize("UTC")
+                else:
+                    start_dt = start_dt.tz_convert("UTC")
+                combined_df = combined_df[combined_df.index >= start_dt]
+
             if end_date:
-                combined_df = combined_df[combined_df.index <= end_date]
+                # Ensure end_date is a comparable timestamp (UTC)
+                end_dt = pd.to_datetime(end_date)
+                if end_dt.tz is None:
+                    end_dt = end_dt.tz_localize("UTC")
+                else:
+                    end_dt = end_dt.tz_convert("UTC")
+                combined_df = combined_df[combined_df.index <= end_dt]
         
         return combined_df
 
-    def get_dataset_from_db(
-        self, sql_query: str, conn: Optional[DuckDBPyConnection] = None
-    ) -> pd.DataFrame:
+    def get_dataset_from_db(self, sql_query: str, conn: Optional[DuckDBPyConnection] = None) -> pd.DataFrame:
         """
         Execute SQL query against the database and return results as DataFrame.
 
         Args:
-           sql_query: SQL query to execute
+           sql_query: SQL query to execute.
+           conn: Optional explicit connection to use.
 
         Returns:
-           Query results as DataFrame
+           Query results as DataFrame.
         """
+        should_close = False
         try:
-            conn = conn or duckdb.connect(self.db_path)
+            if conn is None:
+                # Use class connection or create new one if path is unknown (fallback)
+                conn = self.conn
+            
             df = conn.execute(sql_query).df()
-            conn.close()
             return df
         except Exception as e:
             self.logger.error(f"Error executing query: {e}")
             return pd.DataFrame()
+        finally:
+             if should_close:
+                 conn.close()

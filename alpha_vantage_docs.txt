@@ -5,7 +5,7 @@ Time Series Stock Data APIs
 This suite of APIs provide global equity data in 4 different temporal resolutions: (1) daily, (2) weekly, (3) monthly, and (4) intraday, with 20+ years of historical depth. A lightweight ticker quote endpoint and several utility functions such as ticker search and market open/closure status are also included for your convenience.
 
 
-TIME_SERIES_INTRADAY Trending
+TIME_SERIES_INTRADAY Trending Premium
 
 This API returns current and 20+ years of historical intraday OHLCV time series of the equity specified, covering pre-market and post-market hours where applicable (e.g., 4:00am to 8:00pm Eastern Time for the US market). You can query both raw (as-traded) and split/dividend-adjusted intraday data from this endpoint. The OHLCV data is sometimes called "candles" in finance literature.
 
@@ -52,17 +52,17 @@ Examples (click for JSON output)
 The API will return the most recent 100 intraday OHLCV bars by default when the outputsize parameter is not set
 https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo
 
-Query the most recent full 30 days of intraday data by setting outputsize=full
+Query the most recent 30 days of intraday data by setting outputsize=full
 https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&outputsize=full&apikey=demo
 
-Query intraday data for a given month in history (e.g., 2009-01). Any month in the last 20+ years (since 2000-01) is supported
+Query intraday data for a full month in history (e.g., 2009-01). Any month in the last 20+ years (since 2000-01) is supported
 https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&month=2009-01&outputsize=full&apikey=demo
 
 Downloadable CSV file:
 https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo&datatype=csv
 
 
-💡 Tip: the intraday data (including 20+ years of historical data) is updated at the end of each trading day for all users by default. If you would like to access realtime or 15-minute delayed intraday data, please subscribe to a premium membership plan for your personal use. For commercial use, please contact sales.
+💡 Tip: This is a premium endpoint. If you would like to access realtime, 15-minute delayed, and/or historical intraday data, please subscribe to a premium membership plan for your personal use. For commercial use, please contact sales.
 
 * Realtime and 15-minute delayed US market data is regulated by the stock exchanges, FINRA, and the SEC. Learn more about the key market data policies you need to know as a data consumer.
 
@@ -95,7 +95,7 @@ The name of the equity of your choice. For example: symbol=IBM
 
 ❚ Optional: outputsize
 
-By default, outputsize=compact. Strings compact and full are accepted with the following specifications: compact returns only the latest 100 data points; full returns the full-length time series of 20+ years of historical data. The "compact" option is recommended if you would like to reduce the data size of each API call.
+By default, outputsize=compact. Strings compact and full are accepted with the following specifications: compact returns only the latest 100 data points; full returns the full-length time series of 20+ years of historical data. The "compact" option is recommended if you would like to reduce the data size of each API call. The "compact" outputsize is available to both free and premium API keys. The "full" outputsize is available to premium keys. Please subscribe to any premium membership plan to unlock the outputsize=full capability.
 
 ❚ Optional: datatype
 
@@ -636,7 +636,7 @@ data = r.json()
 print(data)
 
 
-Historical Options Trending
+Historical Options Trending Premium
 
 This API returns the full historical options chain for a specific symbol on a specific date, covering 15+ years of history. Implied volatility (IV) and common Greeks (e.g., delta, gamma, theta, vega, rho) are also returned. Option chains are sorted by expiration dates in chronological order. Within the same expiration date, contracts are sorted by strike prices from low to high.
 
@@ -672,6 +672,9 @@ https://www.alphavantage.co/query?function=HISTORICAL_OPTIONS&symbol=IBM&date=20
 
 Downloadable CSV file:
 https://www.alphavantage.co/query?function=HISTORICAL_OPTIONS&symbol=IBM&date=2017-11-15&apikey=demo&datatype=csv
+
+
+💡 Tip: this is a premium API function. Subscribe to any of the premium membership plans to unlock historical options data.
 
 
 Language-specific guides
