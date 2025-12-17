@@ -34,10 +34,10 @@ def get_default_params(endpoint_name: str) -> dict:
    return params
 
 def get_endpoints(endpoints: Optional[Union[Dict, List]] = None) -> dict:
-   endpoints = endpoints or avs.ALPHA_VANTAGE_SCHEMA
+   endpoints = endpoints or avs.DEFAULT_ENDPOINTS
    # Only get premium endpoints if premium account
    if not settings.get("AlphaVantagePremium", False):
-      return {name: get_default_params(name) for name in endpoints if name in avs.PREMIUM_ENDPOINTS}
+      return {name: get_default_params(name) for name in endpoints if name not in avs.PREMIUM_ENDPOINTS}
     
    return {name: get_default_params(name) for name in endpoints}
 

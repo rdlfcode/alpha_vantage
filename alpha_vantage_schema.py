@@ -20,6 +20,7 @@ DEFAULT_ENDPOINTS = {
    "BALANCE_SHEET": {"symbol": None},
    "CASH_FLOW": {"symbol": None},
    "EARNINGS": {"symbol": None},
+   "HISTORICAL_OPTIONS": {"symbol": None, "date": None, "datatype": "csv"},
    "WTI": {"interval": "daily", "datatype": "csv"},
    "BRENT": {"interval": "daily", "datatype": "csv"},
    "NATURAL_GAS": {"interval": "daily", "datatype": "csv"},
@@ -207,13 +208,9 @@ ALPHA_VANTAGE_SCHEMA = {
    "HT_PHASOR": {"function": "HT_PHASOR", "symbol": "string", "interval": ["1min", "5min", "15min", "30min", "60min", "daily", "weekly", "monthly"], "series_type": ["close", "open", "high", "low"], "datatype": ["csv", "json"]},
 }
 
-SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v]
-
-MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
-
 TABLE_SCHEMAS = {
    "TIME_SERIES_INTRADAY": """
-CREATE TABLE IF NOT EXISTS TIME_SERIES_INTRADAY (
+CREATE TABLE TIME_SERIES_INTRADAY (
    dt TIMESTAMP,
    symbol TEXT,
    open DECIMAL(20, 4),
@@ -223,7 +220,7 @@ CREATE TABLE IF NOT EXISTS TIME_SERIES_INTRADAY (
    volume INT
 );""",
    "TIME_SERIES_DAILY": """
-CREATE TABLE IF NOT EXISTS TIME_SERIES_DAILY (
+CREATE TABLE TIME_SERIES_DAILY (
    dt TIMESTAMP,
    symbol TEXT,
    open DECIMAL(20, 4),
@@ -233,125 +230,20 @@ CREATE TABLE IF NOT EXISTS TIME_SERIES_DAILY (
    volume INT
 );""",
    "GLOBAL_QUOTE": """
-CREATE TABLE IF NOT EXISTS GLOBAL_QUOTE (
+CREATE TABLE GLOBAL_QUOTE (
    symbol TEXT,
    open DECIMAL(20, 4),
    high DECIMAL(20, 4),
    low DECIMAL(20, 4),
    price DECIMAL(20, 4),
    volume INT,
-   latest_trading_day TIMESTAMP,
+   dt TIMESTAMP,
    previous_close DECIMAL(20, 4),
    change DECIMAL(20, 4),
    change_percent TEXT
 );""",
-   "INCOME_STATEMENT": """
-CREATE TABLE IF NOT EXISTS INCOME_STATEMENT (
-   dt TIMESTAMP,
-   symbol TEXT,
-   "reportedCurrency" VARCHAR(32),
-   "grossProfit" BIGINT,
-   "totalRevenue" BIGINT,
-   "costOfRevenue" BIGINT,
-   "costofGoodsAndServicesSold" BIGINT,
-   "operatingIncome" BIGINT,
-   "sellingGeneralAndAdministrative" BIGINT,
-   "researchAndDevelopment" BIGINT,
-   "operatingExpenses" BIGINT,
-   "investmentIncomeNet" VARCHAR(32),
-   "netInterestIncome" DECIMAL(11, 1),
-   "interestIncome" DECIMAL(11, 1),
-   "interestExpense" DECIMAL(10, 1),
-   "nonInterestIncome" VARCHAR(32),
-   "otherNonOperatingIncome" DECIMAL(11, 1),
-   "depreciation" VARCHAR(32),
-   "depreciationAndAmortization" BIGINT,
-   "incomeBeforeTax" BIGINT,
-   "incomeTaxExpense" BIGINT,
-   "interestAndDebtExpense" VARCHAR(32),
-   "netIncomeFromContinuingOperations" DECIMAL(12, 1),
-   "comprehensiveIncomeNetOfTax" VARCHAR(32),
-   "ebit" BIGINT,
-   "ebitda" BIGINT,
-   "netIncome" BIGINT
-);""",
-   "BALANCE_SHEET": """
-CREATE TABLE IF NOT EXISTS BALANCE_SHEET (
-   dt TIMESTAMP,
-   symbol TEXT,
-   "reportedCurrency" VARCHAR(32),
-   "totalAssets" BIGINT,
-   "totalCurrentAssets" BIGINT,
-   "cashAndCashEquivalentsAtCarryingValue" BIGINT,
-   "cashAndShortTermInvestments" BIGINT,
-   "inventory" DECIMAL(11, 1),
-   "currentNetReceivables" BIGINT,
-   "totalNonCurrentAssets" BIGINT,
-   "propertyPlantEquipment" DECIMAL(13, 1),
-   "accumulatedDepreciationAmortizationPPE" VARCHAR(32),
-   "intangibleAssets" DECIMAL(11, 1),
-   "intangibleAssetsExcludingGoodwill" DECIMAL(11, 1),
-   "goodwill" DECIMAL(12, 1),
-   "investments" VARCHAR(32),
-   "longTermInvestments" DECIMAL(12, 1),
-   "shortTermInvestments" BIGINT,
-   "otherCurrentAssets" BIGINT,
-   "otherNonCurrentAssets" VARCHAR(32),
-   "totalLiabilities" BIGINT,
-   "totalCurrentLiabilities" BIGINT,
-   "currentAccountsPayable" BIGINT,
-   "deferredRevenue" VARCHAR(32),
-   "currentDebt" VARCHAR(32),
-   "shortTermDebt" DECIMAL(12, 1),
-   "totalNonCurrentLiabilities" BIGINT,
-   "capitalLeaseObligations" DECIMAL(12, 1),
-   "longTermDebt" DECIMAL(12, 1),
-   "currentLongTermDebt" DECIMAL(11, 1),
-   "longTermDebtNoncurrent" VARCHAR(32),
-   "shortLongTermDebtTotal" DECIMAL(12, 1),
-   "otherCurrentLiabilities" BIGINT,
-   "otherNonCurrentLiabilities" DECIMAL(12, 1),
-   "totalShareholderEquity" BIGINT,
-   "treasuryStock" DECIMAL(1, 1),
-   "retainedEarnings" BIGINT,
-   "commonStock" BIGINT,
-   "commonStockSharesOutstanding" BIGINT
-);""",
-   "CASH_FLOW": """
-CREATE TABLE CASH_FLOW (
-   dt TIMESTAMP,
-   symbol TEXT,
-   "reportedCurrency" VARCHAR(32),
-   "operatingCashflow" BIGINT,
-   "paymentsForOperatingActivities" VARCHAR(32),
-   "proceedsFromOperatingActivities" VARCHAR(32),
-   "changeInOperatingLiabilities" VARCHAR(32),
-   "changeInOperatingAssets" VARCHAR(32),
-   "depreciationDepletionAndAmortization" BIGINT,
-   "capitalExpenditures" BIGINT,
-   "changeInReceivables" DECIMAL(11, 1),
-   "changeInInventory" DECIMAL(11, 1),
-   "profitLoss" VARCHAR(32),
-   "cashflowFromInvestment" BIGINT,
-   "cashflowFromFinancing" BIGINT,
-   "proceedsFromRepaymentsOfShortTermDebt" VARCHAR(32),
-   "paymentsForRepurchaseOfCommonStock" VARCHAR(32),
-   "paymentsForRepurchaseOfEquity" VARCHAR(32),
-   "paymentsForRepurchaseOfPreferredStock" VARCHAR(32),
-   "dividendPayout" DECIMAL(11, 1),
-   "dividendPayoutCommonStock" DECIMAL(11, 1),
-   "dividendPayoutPreferredStock" VARCHAR(32),
-   "proceedsFromIssuanceOfCommonStock" VARCHAR(32),
-   "proceedsFromIssuanceOfLongTermDebtAndCapitalSecuritiesNet" VARCHAR(32),
-   "proceedsFromIssuanceOfPreferredStock" VARCHAR(32),
-   "proceedsFromRepurchaseOfEquity" DECIMAL(12, 1),
-   "proceedsFromSaleOfTreasuryStock" VARCHAR(32),
-   "changeInCashAndCashEquivalents" DECIMAL(11, 1),
-   "changeInExchangeRate" DECIMAL(10, 1),
-   "netIncome" BIGINT
-);""",
    "INSIDER_TRANSACTIONS": """
-CREATE TABLE IF NOT EXISTS INSIDER_TRANSACTIONS (
+CREATE TABLE INSIDER_TRANSACTIONS (
    dt TIMESTAMP,
    symbol TEXT,
    reportingPerson TEXT,
@@ -359,8 +251,17 @@ CREATE TABLE IF NOT EXISTS INSIDER_TRANSACTIONS (
    shares INT,
    price DECIMAL(20, 4)
 );""",
+   "FUNDAMENTALS": """
+CREATE TABLE FUNDAMENTALS (
+   symbol TEXT,
+   dt TIMESTAMP,
+   period_type TEXT,   -- 'ANNUAL' or 'QUARTERLY'
+   report_type TEXT,   -- 'INCOME_STATEMENT', 'BALANCE_SHEET', 'CASH_FLOW', 'EARNINGS'
+   metric TEXT,
+   value DECIMAL(20, 4)
+);""",
    "MACRO": """
-CREATE TABLE IF NOT EXISTS MACRO (
+CREATE TABLE MACRO (
    dt TIMESTAMP,
    wti DECIMAL(20, 4),
    brent DECIMAL(20, 4),
@@ -384,4 +285,53 @@ CREATE TABLE IF NOT EXISTS MACRO (
    unemployment DECIMAL(20, 4),
    nonfarm_payroll DECIMAL(20, 4)
 );""",
+   "HISTORICAL_OPTIONS": """
+CREATE TABLE HISTORICAL_OPTIONS (
+    contractID VARCHAR(64),
+    symbol TEXT,
+    expiration DATE,
+    strike DECIMAL(20, 4),
+    type TEXT,
+    last DECIMAL(20, 4),
+    mark DECIMAL(20, 4),
+    bid DECIMAL(20, 4),
+    bid_size INT,
+    ask DECIMAL(20, 4),
+    ask_size INT,
+    volume INT,
+    open_interest INT,
+    dt TIMESTAMP,
+    implied_volatility DECIMAL(20, 5),
+    delta DECIMAL(20, 5),
+    gamma DECIMAL(20, 5),
+    theta DECIMAL(20, 5),
+    vega DECIMAL(20, 5),
+    rho DECIMAL(20, 5)
+);""",
 }
+
+SYMBOL_ENDPOINTS = [k for k, v in ALPHA_VANTAGE_SCHEMA.items() if "symbol" in v or "symbols" in v]
+
+MACRO_ENDPOINTS = list(set(ALPHA_VANTAGE_SCHEMA) - set(SYMBOL_ENDPOINTS))
+
+FUNDAMENTAL_ENDPOINTS = [
+    "INCOME_STATEMENT",
+    "BALANCE_SHEET",
+    "CASH_FLOW",
+    "EARNINGS"
+]
+
+# Map endpoints to their tables
+# Default: START -> START (Current logic uses endpoint.upper())
+ENDPOINT_TO_TABLE_MAP = {}
+
+# 1. Macro Endpoints -> MACRO table
+for endpoint in MACRO_ENDPOINTS:
+    ENDPOINT_TO_TABLE_MAP[endpoint] = "MACRO"
+
+# 2. Symbol Endpoints -> Their own table (defaulting to endpoint name)
+for endpoint in SYMBOL_ENDPOINTS:
+    if endpoint in FUNDAMENTAL_ENDPOINTS:
+        ENDPOINT_TO_TABLE_MAP[endpoint] = "FUNDAMENTALS"
+    else:
+        ENDPOINT_TO_TABLE_MAP[endpoint] = endpoint

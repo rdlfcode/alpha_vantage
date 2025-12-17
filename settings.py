@@ -5,8 +5,9 @@ settings = {
    "db_path": "data/alpha_vantage.db",
    ######### ALPHA VANTAGE #########
    "AlphaVantageRPM": 75,
-   "AlphaVantageRPD": 25,
-   "AlphaVantagePremium": False,
+   "AlphaVantageRPD": 1000000,
+   "AlphaVantagePremium": True,
+   "MAX_CONCURRENT_REQUESTS": 1,
    ######### LOGGING ###############
    "logging": {
       "filename": "av.log",
