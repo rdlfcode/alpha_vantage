@@ -11,4 +11,3 @@ __pycache__/
 .env
 *.db
 *.db.wal
-*.py
