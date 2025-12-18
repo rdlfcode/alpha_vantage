@@ -143,10 +143,10 @@ def get_numeric_columns(table_name: str) -> list[str]:
     Parses the SQL schema for the given table and returns a list of column names
     that should be treated as numeric (DECIMAL, INT, BIGINT, FLOAT).
     """
-    if table_name not in TABLE_SCHEMAS:
+    if table_name not in avs.TABLE_SCHEMAS:
         return []
 
-    schema_sql = TABLE_SCHEMAS[table_name]
+    schema_sql = avs.TABLE_SCHEMAS[table_name]
     numeric_cols = []
     
     # Simple parsing of the CREATE TABLE statement
