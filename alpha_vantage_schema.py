@@ -380,34 +380,4 @@ for endpoint in SYMBOL_ENDPOINTS:
         ENDPOINT_TO_TABLE_MAP[endpoint] = "FUNDAMENTALS"
     else:
         ENDPOINT_TO_TABLE_MAP[endpoint] = endpoint
-
-def get_numeric_columns(table_name: str) -> list[str]:
-    """
-    Parses the SQL schema for the given table and returns a list of column names
-    that should be treated as numeric (DECIMAL, INT, BIGINT, FLOAT).
-    """
-    if table_name not in TABLE_SCHEMAS:
-        return []
-
-    schema_sql = TABLE_SCHEMAS[table_name]
-    numeric_cols = []
-    
-    # Simple parsing of the CREATE TABLE statement
-    # We look for lines like "column_name TYPE,"
-    for line in schema_sql.splitlines():
-        line = line.strip()
-        if not line or line.startswith("CREATE TABLE") or line.startswith(");"):
-            continue
-            
-        # Remove trailing comma and comments
-        line = line.split(",")[0].split("--")[0].strip()
         
-        parts = line.split()
-        if len(parts) >= 2:
-            col_name = parts[0].strip('"') # Handle quoted identifiers
-            col_type = parts[1].upper()
-            
-            if any(x in col_type for x in ["DECIMAL", "INT", "BIGINT", "FLOAT", "DOUBLE", "REAL", "NUMERIC"]):
-                numeric_cols.append(col_name)
-                
-    return numeric_cols

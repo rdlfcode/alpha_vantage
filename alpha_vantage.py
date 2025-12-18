@@ -290,7 +290,7 @@ class AlphaVantageClient:
                     # Standardize numeric columns based on schema
                     # This prevents "Conversion Error" in DuckDB when it expects specific types
                     table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-                    numeric_cols = avs.get_numeric_columns(table_name)
+                    numeric_cols = utils.get_numeric_columns(table_name)
                     
                     for col in numeric_cols:
                         if col in df.columns:
@@ -549,6 +549,7 @@ class AlphaVantageClient:
                         if latest_dt and latest_dt < min_required_date:
                             self.logger.info(f"Cached data is stale (latest: {latest_dt}). Fetching fresh...")
                         else:
+                            self._save_to_database(endpoint_name, params, df)
                             return df
                     else:
                         return df
