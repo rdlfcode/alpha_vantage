@@ -22,14 +22,7 @@ from dotenv import load_dotenv
 import utils
 from rate_limiter import RateLimiter
 from settings import settings
-from alpha_vantage_schema import (
-    BASE_URL,
-    SYMBOL_ENDPOINTS,
-    MACRO_ENDPOINTS,
-    FUNDAMENTAL_ENDPOINTS,
-    TABLE_SCHEMAS,
-    ENDPOINT_TO_TABLE_MAP,
-)
+import alpha_vantage_schema as avs
 
 # Load environment variables
 load_dotenv()
@@ -103,7 +96,7 @@ class AlphaVantageClient:
         self.logger.info(f"Fetching data for {endpoint_name} with params: {params}")
 
         try:
-            response = requests.get(BASE_URL, params=full_params, timeout=30)
+            response = requests.get(avs.BASE_URL, params=full_params, timeout=30)
             response.raise_for_status()
             
             # Try to parse as JSON first to check for API errors (which are always JSON)
@@ -223,7 +216,7 @@ class AlphaVantageClient:
                             df.loc[:, col] = pd.to_numeric(df[col], errors="coerce")
 
 
-                elif endpoint_name in FUNDAMENTAL_ENDPOINTS:
+                elif endpoint_name in avs.FUNDAMENTAL_ENDPOINTS:
                     # Fundamental Data (Income Statement, Balance Sheet, Cash Flow, Earnings)
                     records = []
                     symbol = params.get("symbol")
@@ -288,8 +281,8 @@ class AlphaVantageClient:
                         df["dt"] = pd.Timestamp.now("UTC")
                         
                     # Standardize numeric columns based on schema
-                    # This prevents "Conversion Error" in DuckDB when it expects specific types
-                    table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+                    # prevents "Conversion Error" in DuckDB when it expects specific types
+                    table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
                     numeric_cols = utils.get_numeric_columns(table_name)
                     
                     for col in numeric_cols:
@@ -328,7 +321,7 @@ class AlphaVantageClient:
             elif df.index.name in ["timestamp", "fiscalDateEnding", "date"]:
                 df.index.name = "dt"
 
-            if endpoint_name in SYMBOL_ENDPOINTS and "symbol" in params.keys():
+            if endpoint_name in avs.SYMBOL_ENDPOINTS and "symbol" in params.keys():
                 if not df.empty:
                     df.loc[:, "symbol"] = params["symbol"]
 
@@ -339,35 +332,18 @@ class AlphaVantageClient:
         # ENSURE UTC
         if not df.empty and "dt" in df.columns:
             try:
-                # If naive, assume it depends on endpoint, but for simplicity/safety we treat US stocks as Eastern -> UTC
-                # However, usually just strictly forcing UTC is what's requested.
-                # If it's already TZ-aware, convert to UTC. If naive, assume UTC or localize then convert.
-                # Given user request: "ensure... stored on UTC"
-                # Let's standardize on UTC.
-                
-                # Heuristic: If naive, assume US/Eastern for stocks, else UTC? 
-                # Or just force everything to UTC for storage uniformity.
-                # For now, we will perform a simple conversion.
                 if df["dt"].dt.tz is None:
-                    # Naive
-                    # We could try to be smart with Symbol/Exchange if available, but that requires lookups.
-                    # Defaulting to treating as UTC-compatible or just standardizing without shift if dates are dates.
-                    # For Intraday (which has time), it matters.
-                    # Alpha Vantage Daily is YYYY-MM-DD (naive).
-                    # Alpha Vantage Intraday is YYYY-MM-DD HH:MM:SS (in EDT/EST usually).
-                    
                     if endpoint_name == "TIME_SERIES_INTRADAY":
                          # Localize as ET then convert to UTC
                          df["dt"] = df["dt"].dt.tz_localize("US/Eastern", ambiguous="infer").dt.tz_convert("UTC")
                     else:
-                         # Daily or others - treat as UTC midnight or just keep date?
-                         # User wants UTC.
                          df["dt"] = df["dt"].dt.tz_localize("UTC")
                 else:
                     df["dt"] = df["dt"].dt.tz_convert("UTC")
                 
                 # Re-set index if it was dt
                 if df.index.name == "dt":
+                    df = df.assign(dt=pd.to_datetime(df["dt"]))
                     df.set_index("dt", inplace=True)
                     
             except Exception as utc_err:
@@ -388,7 +364,7 @@ class AlphaVantageClient:
 
         try:
             df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
-            table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+            table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
 
             # 1. Ensure Table Exists
             try:
@@ -399,10 +375,9 @@ class AlphaVantageClient:
                 
                 if not tbl_exists:
                     # Create table
-                    schema_key = table_name if table_name in ["MACRO", "FUNDAMENTALS"] else endpoint_name
-                    schema_sql = TABLE_SCHEMAS.get(schema_key)
+                    schema_sql = avs.TABLE_SCHEMAS.get(table_name)
                     if not schema_sql and table_name == "MACRO":
-                        schema_sql = TABLE_SCHEMAS.get("MACRO")
+                        schema_sql = avs.TABLE_SCHEMAS.get("MACRO")
                     
                     if schema_sql:
                         conn.execute(schema_sql)
@@ -530,8 +505,9 @@ class AlphaVantageClient:
                     self.logger.info(f"Loading from cache: {filepath}")
                     
                     if "dt" in df.columns:
-                        df["dt"] = pd.to_datetime(df["dt"])
+                        df = df.assign(dt=pd.to_datetime(df["dt"]))
                         df.set_index("dt", inplace=True)
+                        df.index.name = "dt"
 
                     if min_required_date and not df.empty:
                         latest_dt = None
@@ -654,12 +630,12 @@ class AlphaVantageClient:
             tasks = []
             
             # 1. Symbol-specific tasks
-            symbol_endpoints = {
-                k: v for k, v in endpoints.items() if k in SYMBOL_ENDPOINTS
+            avs.SYMBOL_ENDPOINTS = {
+                k: v for k, v in endpoints.items() if k in avs.SYMBOL_ENDPOINTS
             }
             
             for symbol in symbols:
-                for endpoint_name, params in symbol_endpoints.items():
+                for endpoint_name, params in avs.SYMBOL_ENDPOINTS.items():
                     # Create a copy of params
                     task_params = params.copy()
                     task_params["symbol"] = symbol
@@ -674,7 +650,7 @@ class AlphaVantageClient:
                         e_date = pd.to_datetime(end_date)
                         
                         try:
-                            table_name = ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+                            table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
                             existing_df = self.conn.execute(f"SELECT DISTINCT dt FROM {table_name} WHERE symbol = '{symbol}' ORDER BY dt").df()
                             if not existing_df.empty:
                                 existing_dates = pd.to_datetime(existing_df['dt']).dt.normalize() # Ensure normalize
@@ -701,10 +677,10 @@ class AlphaVantageClient:
                         tasks.append((endpoint_name, task_params))
 
             # 2. Macro-economic tasks
-            macro_endpoints_map = {
-                k: v for k, v in endpoints.items() if k in MACRO_ENDPOINTS
+            avs.MACRO_ENDPOINTS_map = {
+                k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS
             }
-            for endpoint_name, params in macro_endpoints_map.items():
+            for endpoint_name, params in avs.MACRO_ENDPOINTS_map.items():
                 if not self._should_fetch("MACRO", endpoint_name, params) and not force_refresh:
                     continue
                 tasks.append((endpoint_name, params))
