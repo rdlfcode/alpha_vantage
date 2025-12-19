@@ -210,7 +210,8 @@ CREATE TABLE TIME_SERIES_INTRADAY (
    high DECIMAL(20, 4),
    low DECIMAL(20, 4),
    close DECIMAL(20, 4),
-   volume INT
+   volume INT,
+   PRIMARY KEY (symbol, dt)
 );""",
    "TIME_SERIES_DAILY": """
 CREATE TABLE TIME_SERIES_DAILY (
@@ -220,7 +221,8 @@ CREATE TABLE TIME_SERIES_DAILY (
    high DECIMAL(20, 4),
    low DECIMAL(20, 4),
    close DECIMAL(20, 4),
-   volume INT
+   volume INT,
+   PRIMARY KEY (symbol, dt)
 );""",
    "GLOBAL_QUOTE": """
 CREATE TABLE GLOBAL_QUOTE (
@@ -233,7 +235,8 @@ CREATE TABLE GLOBAL_QUOTE (
    dt TIMESTAMP,
    previous_close DECIMAL(20, 4),
    change DECIMAL(20, 4),
-   change_percent TEXT
+   change_percent TEXT,
+   PRIMARY KEY (symbol, dt)
 );""",
    "INSIDER_TRANSACTIONS": """
 CREATE TABLE INSIDER_TRANSACTIONS (
@@ -242,7 +245,9 @@ CREATE TABLE INSIDER_TRANSACTIONS (
    reportingPerson TEXT,
    transactionType TEXT,
    shares INT,
-   price DECIMAL(20, 4)
+   price DECIMAL(20, 4),
+   -- Unique constraint on logical key; reportingPerson + transaction + time
+   PRIMARY KEY (symbol, dt, reportingPerson, transactionType, shares, price)
 );""",
    "FUNDAMENTALS": """
 CREATE TABLE FUNDAMENTALS (
@@ -251,11 +256,12 @@ CREATE TABLE FUNDAMENTALS (
    period_type TEXT,   -- 'ANNUAL' or 'QUARTERLY'
    report_type TEXT,   -- 'INCOME_STATEMENT', 'BALANCE_SHEET', 'CASH_FLOW', 'EARNINGS'
    metric TEXT,
-   value DECIMAL(20, 4)
+   value DECIMAL(20, 4),
+   PRIMARY KEY (symbol, period_type, report_type, metric, dt)
 );""",
    "MACRO": """
 CREATE TABLE MACRO (
-   dt TIMESTAMP,
+   dt TIMESTAMP PRIMARY KEY,
    wti DECIMAL(20, 4),
    brent DECIMAL(20, 4),
    natural_gas DECIMAL(20, 4),
@@ -299,7 +305,8 @@ CREATE TABLE HISTORICAL_OPTIONS (
     gamma DECIMAL(20, 5),
     theta DECIMAL(20, 5),
     vega DECIMAL(20, 5),
-    rho DECIMAL(20, 5)
+    rho DECIMAL(20, 5),
+    PRIMARY KEY (symbol, expiration, strike, type, dt)
 );""",
     "OVERVIEW": """
 CREATE TABLE OVERVIEW (
@@ -349,8 +356,20 @@ CREATE TABLE OVERVIEW (
     SharesOutstanding BIGINT,
     DividendDate DATE,
     ExDividendDate DATE,
-    dt TIMESTAMP
+    dt TIMESTAMP,
+    PRIMARY KEY (Symbol, dt)
 );"""
+}
+
+TABLE_PKS = {
+   "TIME_SERIES_INTRADAY": ["symbol", "dt"],
+   "TIME_SERIES_DAILY": ["symbol", "dt"],
+   "GLOBAL_QUOTE": ["symbol", "dt"],
+   "INSIDER_TRANSACTIONS": ["symbol", "dt", "reportingPerson", "transactionType", "shares", "price"],
+   "FUNDAMENTALS": ["symbol", "period_type", "report_type", "metric", "dt"],
+   "MACRO": ["dt"],
+   "HISTORICAL_OPTIONS": ["symbol", "expiration", "strike", "type", "dt"],
+   "OVERVIEW": ["Symbol", "dt"]
 }
 
 BASE_URL = "https://www.alphavantage.co/query"
