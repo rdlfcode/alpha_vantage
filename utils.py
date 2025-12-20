@@ -138,36 +138,71 @@ def get_exchange_timezone(conn: DuckDBPyConnection, symbol: str) -> str:
    except Exception:
          return "US/Eastern"
 
-def get_numeric_columns(table_name: str) -> list[str]:
-    """
-    Parses the SQL schema for the given table and returns a list of column names
-    that should be treated as numeric (DECIMAL, INT, BIGINT, FLOAT).
-    """
-    if table_name not in avs.TABLE_SCHEMAS:
-        return []
+def get_schema_columns(table_name: str) -> Dict[str, str]:
+   """
+   Parses the SQL schema for the given table and returns a dictionary mapping
+   column names to their SQL types.
+   """
+   if table_name not in avs.TABLE_SCHEMAS:
+       return {}
 
-    schema_sql = avs.TABLE_SCHEMAS[table_name]
-    numeric_cols = []
-    
-    # Simple parsing of the CREATE TABLE statement
-    # We look for lines like "column_name TYPE,"
-    for line in schema_sql.splitlines():
-        line = line.strip()
-        if not line or line.startswith("CREATE TABLE") or line.startswith(");"):
-            continue
-            
-        # Remove trailing comma and comments
-        line = line.split(",")[0].split("--")[0].strip()
-        
-        parts = line.split()
-        if len(parts) >= 2:
-            col_name = parts[0].strip('"') # Handle quoted identifiers
-            col_type = parts[1].upper()
-            
-            if any(x in col_type for x in ["DECIMAL", "INT", "BIGINT", "FLOAT", "DOUBLE", "REAL", "NUMERIC"]):
-                numeric_cols.append(col_name)
-                
-    return numeric_cols
+   schema_sql = avs.TABLE_SCHEMAS[table_name]
+   columns = {}
+
+   for line in schema_sql.splitlines():
+       line = line.strip()
+       if not line or line.startswith("CREATE TABLE") or line.startswith(");"):
+           continue
+           
+       # Remove trailing comma and comments
+       line = line.split(",")[0].split("--")[0].strip()
+       
+       parts = line.split()
+       if len(parts) >= 2:
+           col_name = parts[0].strip('"') # Handle quoted identifiers
+           col_type = parts[1].upper()
+           columns[col_name] = col_type
+           
+   return columns
+
+def enforce_schema(df: pd.DataFrame, table_name: str) -> pd.DataFrame:
+   """
+   Enforces the database schema types on the DataFrame.
+   Converts columns to their appropriate types (Numeric, Date, String) 
+   based on the defined schema.
+   """
+   schema_cols = get_schema_columns(table_name)
+   if not schema_cols:
+       return df
+
+   # Iterate over columns present in both DF and Schema
+   for col in df.columns:
+       if col not in schema_cols:
+           continue
+       
+       sql_type = schema_cols[col]
+       
+       # 1. Numeric Conversion
+       if any(x in sql_type for x in ["DECIMAL", "INT", "BIGINT", "FLOAT", "DOUBLE", "REAL", "NUMERIC"]):
+           df[col] = pd.to_numeric(df[col], errors='coerce')
+           
+       # 2. Date/Timestamp Conversion
+       elif any(x in sql_type for x in ["DATE", "TIMESTAMP"]):
+           df[col] = pd.to_datetime(df[col], errors='coerce')
+           # Ensure UTC if it's a timestamp
+           if "TIMESTAMP" in sql_type:
+               if df[col].dt.tz is None:
+                    # Assume UTC if naive, or let caller handle? 
+                    # Usually better to be explicit, but here we just ensure datetime object.
+                    pass
+       
+       # 3. String/Text handling (Optional, normally object is fine)
+       elif "TEXT" in sql_type or "VARCHAR" in sql_type:
+           # Ensure string type, handling NaNs
+           # df[col] = df[col].astype(str).replace('nan', None) # Caution with this
+           pass
+
+   return df
 
 def get_from_db(conn: DuckDBPyConnection, endpoint_name: str, params: Dict) -> pd.DataFrame:
    """
@@ -202,7 +237,7 @@ def get_from_db(conn: DuckDBPyConnection, endpoint_name: str, params: Dict) -> p
       if not df.empty:
             # Restore index
             if "dt" in df.columns:
-               df = df.assign(dt=pd.to_datetime(df["dt"]))
+               df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
                df.set_index("dt", inplace=True)
 
       return df

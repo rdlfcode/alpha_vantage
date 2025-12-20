@@ -6,7 +6,7 @@ It serves as the single source of truth for API endpoints and their parameters.
 """
 
 DEFAULT_ENDPOINTS = {
-   "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
+   "TIME_SERIES_DAILY_ADJUSTED": {"symbol": None, "outputsize": "full", "datatype": "csv"},
    "INSIDER_TRANSACTIONS": {"symbol": None},
    "INCOME_STATEMENT": {"symbol": None},
    "BALANCE_SHEET": {"symbol": None},
@@ -224,6 +224,17 @@ CREATE TABLE TIME_SERIES_DAILY (
    volume INT,
    PRIMARY KEY (symbol, dt)
 );""",
+   "TIME_SERIES_DAILY_ADJUSTED": """
+CREATE TABLE TIME_SERIES_DAILY_ADJUSTED (
+   dt TIMESTAMP,
+   symbol TEXT,
+   open DECIMAL(20, 4),
+   high DECIMAL(20, 4),
+   low DECIMAL(20, 4),
+   close DECIMAL(20, 4),
+   volume INT,
+   PRIMARY KEY (symbol, dt)
+);""",
    "GLOBAL_QUOTE": """
 CREATE TABLE GLOBAL_QUOTE (
    symbol TEXT,
@@ -246,7 +257,6 @@ CREATE TABLE INSIDER_TRANSACTIONS (
    transactionType TEXT,
    shares INT,
    price DECIMAL(20, 4),
-   -- Unique constraint on logical key; reportingPerson + transaction + time
    PRIMARY KEY (symbol, dt, reportingPerson, transactionType, shares, price)
 );""",
    "FUNDAMENTALS": """
@@ -261,7 +271,7 @@ CREATE TABLE FUNDAMENTALS (
 );""",
    "MACRO": """
 CREATE TABLE MACRO (
-   dt TIMESTAMP PRIMARY KEY,
+   dt TIMESTAMP,
    wti DECIMAL(20, 4),
    brent DECIMAL(20, 4),
    natural_gas DECIMAL(20, 4),
@@ -282,7 +292,8 @@ CREATE TABLE MACRO (
    retail_sales DECIMAL(20, 4),
    durables DECIMAL(20, 4),
    unemployment DECIMAL(20, 4),
-   nonfarm_payroll DECIMAL(20, 4)
+   nonfarm_payroll DECIMAL(20, 4),
+   PRIMARY KEY (dt)
 );""",
    "HISTORICAL_OPTIONS": """
 CREATE TABLE HISTORICAL_OPTIONS (
@@ -364,6 +375,7 @@ CREATE TABLE OVERVIEW (
 TABLE_PKS = {
    "TIME_SERIES_INTRADAY": ["symbol", "dt"],
    "TIME_SERIES_DAILY": ["symbol", "dt"],
+   "TIME_SERIES_DAILY_ADJUSTED": ["symbol", "dt"],
    "GLOBAL_QUOTE": ["symbol", "dt"],
    "INSIDER_TRANSACTIONS": ["symbol", "dt", "reportingPerson", "transactionType", "shares", "price"],
    "FUNDAMENTALS": ["symbol", "period_type", "report_type", "metric", "dt"],

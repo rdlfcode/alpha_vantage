@@ -1,7 +1,8 @@
+import duckdb
 import logging
-import pandas as pd
+from settings import settings
 from alpha_vantage import AlphaVantageClient
-import time
+from alpha_vantage_schema import ENDPOINT_TO_TABLE_MAP, TABLE_SCHEMAS, DEFAULT_ENDPOINTS
 
 # Configure logging
 root_logger = logging.getLogger()
@@ -21,23 +22,23 @@ logger = logging.getLogger(__name__)
 
 def main():
     logger.info("Starting Alpha Vantage Data Updater...")
-    client = AlphaVantageClient()
+
+    # Ensure tables exist
+    conn = duckdb.connect(settings.get("db_path"))
+    tables = set()
+    for endpoint_name in DEFAULT_ENDPOINTS:
+        tables.add(ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper())
+
+    for table_name in tables:
+        schema_sql = TABLE_SCHEMAS.get(table_name)
+        if schema_sql:
+            create_sql = schema_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+            conn.execute(create_sql)
+
+    client = AlphaVantageClient(db_conn=conn)
 
     # Update data
-    start_time = time.time()
-    df = client.get_data(
-        # We want EOD data
-        end_date=(pd.to_datetime(start_time) - pd.DateOffset(days=1)).strftime("%Y-%m-%d")
-    )
-    end_time = time.time()
-    
-    duration = end_time - start_time
-    logger.info(f"Update completed in {duration:.2f} seconds.")
-    
-    if not df.empty:
-        logger.info(f"Fetched {len(df)} new rows of data.")
-    else:
-        logger.info("No new data was fetched (everything up to date).")
+    df = client.get_data()
 
 if __name__ == "__main__":
    main()

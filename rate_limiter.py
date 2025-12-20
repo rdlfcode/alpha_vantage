@@ -10,20 +10,22 @@ class RateLimiter:
     def __init__(self, requests_per_minute, requests_per_day):
         self.requests_per_minute = requests_per_minute
         self.requests_per_day = requests_per_day
-        self.minute_timestamps = deque()
         self.day_timestamps = deque()
         self.lock = threading.Lock()
+        
+        # Calculate minimum interval between requests to space them evenly
+        if self.requests_per_minute > 0:
+            self.min_interval = 60.0 / self.requests_per_minute
+        else:
+            self.min_interval = 0
+            
+        self.last_request_time = 0
 
     def wait_if_needed(self):
         with self.lock:
             current_time = time.time()
 
-            # Prune old timestamps
-            while (
-                self.minute_timestamps
-                and current_time - self.minute_timestamps[0] > 60
-            ):
-                self.minute_timestamps.popleft()
+            # Prune old daily timestamps
             while (
                 self.day_timestamps
                 and current_time - self.day_timestamps[0] > 24 * 60 * 60
@@ -37,27 +39,22 @@ class RateLimiter:
                 )
                 raise Exception("Daily request limit reached.")
 
-            # Check minute limit and wait if necessary
-            if len(self.minute_timestamps) >= self.requests_per_minute:
-                wait_time = 60 - (current_time - self.minute_timestamps[0])
-                logger.info(f"Rate limit reached. Waiting for {wait_time:.2f} seconds.")
-                # We release the lock while sleeping to avoid blocking other threads entirely
-                # from checking, although they will likely hit the same limit.
-                # However, strictly speaking, sleeping with the lock held blocks everything.
-                # Ideally we want to sleep outside the lock, but we need to reserve the slot.
-                # For simplicity in this script, sleeping inside lock ensures strict sequential
-                # adherence to rate limit, which is safer for the API.
+            # Enforce even spacing (interval)
+            elapsed = current_time - self.last_request_time
+            if elapsed < self.min_interval:
+                wait_time = self.min_interval - elapsed
+                logger.debug(f"Spacing out request. Waiting for {wait_time:.2f} seconds.")
                 time.sleep(wait_time)
                 # Update current time after sleep
                 current_time = time.time()
 
             # Record the new request time
-            self.minute_timestamps.append(current_time)
+            self.last_request_time = current_time
             self.day_timestamps.append(current_time)
+            
             logger.debug(
-                "Request made. RPM: %d/%d, RPD: %d/%d",
-                len(self.minute_timestamps),
-                self.requests_per_minute,
+                "Request allowed. Interval: %.2fs, RPD: %d/%d",
+                self.min_interval,
                 len(self.day_timestamps),
                 self.requests_per_day,
             )

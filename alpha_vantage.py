@@ -15,7 +15,7 @@ from datetime import datetime
 from io import StringIO
 from pathlib import Path
 from typing import Optional, Dict, List, Union
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from tqdm import tqdm
 from dotenv import load_dotenv
 
@@ -119,6 +119,7 @@ class AlphaVantageClient:
                     if "consider spreading out your free API requests" in str(msg_val) or "Burst pattern detected" in str(msg_val):
                         self.logger.warning("API rate limit hint received (RPM). Sleeping 60s.")
                         time.sleep(60)
+                        print(data)
                         return self._fetch_data(endpoint_name, params)
 
                     self.logger.warning(
@@ -192,7 +193,7 @@ class AlphaVantageClient:
                         df = pd.DataFrame(records)
                         
                         if "dt" in df.columns:
-                            df = df.assign(dt=pd.to_datetime(df["dt"]))
+                            df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
                             df.set_index("dt", inplace=True)
                             df.index.name = "dt"
                         
@@ -204,6 +205,19 @@ class AlphaVantageClient:
                             inplace=True,
                         )
 
+                elif endpoint_name == "INSIDER_TRANSACTIONS":
+                    # Insider Transactions
+                    transactions = []
+                    for k, v in data.items():
+                         if isinstance(v, list):
+                             transactions = v
+                             break
+                    
+                    if transactions:
+                        df = pd.DataFrame(transactions)
+                    else:
+                        self.logger.warning(f"No transaction list found in {endpoint_name} response")
+
                 elif any("data" in k.lower() for k in data.keys()):
                     # Economic indicators and commodities
                     data_key = next(k for k in data.keys() if "data" in k.lower())
@@ -214,7 +228,6 @@ class AlphaVantageClient:
                         numeric_cols = df.select_dtypes(include=["object"]).columns
                         for col in numeric_cols:
                             df.loc[:, col] = pd.to_numeric(df[col], errors="coerce")
-
 
                 elif endpoint_name in avs.FUNDAMENTAL_ENDPOINTS:
                     # Fundamental Data (Income Statement, Balance Sheet, Cash Flow, Earnings)
@@ -271,25 +284,18 @@ class AlphaVantageClient:
                     df = pd.DataFrame([data])
                     
                     # Clean "None", "-", "0000-00-00" before standardizing
-                    df.replace(["None", "none", "-", "0000-00-00"], [None, None, None, None], inplace=True)
+                    # Clean common empty/null string representations
+                    df.replace(["None", "none", "-", "0000-00-00", "null", "NULL"], [None, None, None, None, None, None], inplace=True)
                     
                     # Add timestamp for point-in-time reference if missing
                     if "dt" not in df.columns:
                         df["dt"] = pd.Timestamp.now("UTC")
                         
-                    if "dt" not in df.columns:
-                        df["dt"] = pd.Timestamp.now("UTC")
-                        
                     # Standardize numeric columns based on schema
-                    # prevents "Conversion Error" in DuckDB when it expects specific types
-                    table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-                    numeric_cols = utils.get_numeric_columns(table_name)
-                    
-                    for col in numeric_cols:
-                        if col in df.columns:
-                            # Force Coerce keys that are supposed to be numeric
-                            # This handles "None", "-", empty strings, etc. by turning them into NaN
-                            df[col] = pd.to_numeric(df[col], errors='coerce')
+                    # Note: Strict numeric coercion is now handled in _save_to_database
+                    # but we can optionally do a soft pass here or just leave it to save.
+                    # We will leave the rest of the logic to avoid "Conversion Error"
+                    pass
 
             # Standardize datetime column
             for col_name in [
@@ -316,7 +322,7 @@ class AlphaVantageClient:
             df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
 
             if "dt" in df.columns:
-                df = df.assign(dt=pd.to_datetime(df["dt"]))
+                df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
                 df.set_index("dt", inplace=True)
             elif df.index.name in ["timestamp", "fiscalDateEnding", "date"]:
                 df.index.name = "dt"
@@ -324,6 +330,8 @@ class AlphaVantageClient:
             if endpoint_name in avs.SYMBOL_ENDPOINTS and "symbol" in params.keys():
                 if not df.empty:
                     df.loc[:, "symbol"] = params["symbol"]
+
+            df.replace(["None", "none", "-", "0000-00-00"], [None, None, None, None], inplace=True)
 
         except Exception as e:
             self.logger.error(f"Error parsing data for {endpoint_name}: {e}")
@@ -343,7 +351,7 @@ class AlphaVantageClient:
                 
                 # Re-set index if it was dt
                 if df.index.name == "dt":
-                    df = df.assign(dt=pd.to_datetime(df["dt"]))
+                    df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
                     df.set_index("dt", inplace=True)
                     
             except Exception as utc_err:
@@ -353,113 +361,106 @@ class AlphaVantageClient:
 
     def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
         """
-        Save DataFrame to SQLite database using the correct schema for each endpoint.
+        Save DataFrame to database using UPSERT (INSERT ... ON CONFLICT) logic.
         """
         if df.empty:
-            self.logger.warning(f"No data to save for {endpoint_name} with params {params}")
             return
 
         conn = conn or self.conn
-        should_close = False
-
+        table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+        
         try:
-            df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
-            table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-
             # 1. Ensure Table Exists
-            try:
-                # Check if table exists
-                tbl_exists = conn.execute(
-                    f"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '{table_name}'"
-                ).fetchone()[0] > 0
-                
-                if not tbl_exists:
-                    # Create table
-                    schema_sql = avs.TABLE_SCHEMAS.get(table_name)
-                    if not schema_sql and table_name == "MACRO":
-                        schema_sql = avs.TABLE_SCHEMAS.get("MACRO")
-                    
-                    if schema_sql:
-                        conn.execute(schema_sql)
-                    else:
-                        self.logger.error(f"No schema found for {endpoint_name} (Table: {table_name})")
-                        return
-            except Exception as e:
-                self.logger.error(f"Error checking/creating table {table_name}: {e}")
+            schema_sql = avs.TABLE_SCHEMAS.get(table_name)
+            if schema_sql:
+                # Use IF NOT EXISTS for simplicity
+                create_sql = schema_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+                conn.execute(create_sql)
+            else:
+                self.logger.error(f"No schema found for {table_name}")
                 return
 
-            # 2. Prepare Data (Rename/Delete overlaps)
+            # 2. Prepare Data
+            df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
+            
+            # Special Handling for MACRO (Wide table, update specific column)
             if table_name == "MACRO":
                 col_name = endpoint_name.lower()
                 if col_name not in df_to_save.columns:
-                    # heuristics to find value column
+                    # Heuristics to find the value column if name doesn't match endpoint
                     candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
                     if candidates:
                         df_to_save.rename(columns={candidates[0]: col_name}, inplace=True)
-
-                if col_name in df_to_save.columns and "dt" in df_to_save.columns:
-                    df_subset = df_to_save[["dt", col_name]]
-                    if not df_subset.empty:
-                        min_dt = df_subset["dt"].min()
-                        max_dt = df_subset["dt"].max()
-                        conn.execute(
-                            f"DELETE FROM {table_name} WHERE {col_name} IS NOT NULL AND dt >= '{min_dt}' AND dt <= '{max_dt}'"
-                        )
-                    
-                    df_to_save = df_subset
+                
+                if col_name in df_to_save.columns:
+                    df_to_save = df_to_save[["dt", col_name]]
                 else:
-                    self.logger.warning(f"Could not map columns for MACRO table insert: {df_to_save.columns}")
+                    self.logger.warning(f"Could not map columns for MACRO table: {df_to_save.columns}")
                     return
-            else:
-                # Delete overlaps
-                if "dt" in df_to_save.columns:
-                    min_dt = df_to_save["dt"].min()
-                    max_dt = df_to_save["dt"].max()
-                    
-                    symbol_clause = ""
-                    if "symbol" in df_to_save.columns:
-                        symbol_val = df_to_save["symbol"].iloc[0]
-                        symbol_clause = f"AND symbol = '{symbol_val}'"
-                    
-                    report_type_clause = ""
-                    if table_name == "FUNDAMENTALS" and "report_type" in df_to_save.columns:
-                        report_type_val = df_to_save["report_type"].iloc[0]
-                        report_type_clause = f"AND report_type = '{report_type_val}'"
 
-                    conn.execute(
-                        f"DELETE FROM {table_name} WHERE dt >= '{min_dt}' AND dt <= '{max_dt}' {symbol_clause} {report_type_clause}"
-                    )
-
-            # 3. Filter Columns and Insert
+            # 3. Filter for valid database columns and Enforce Types
             try:
-                # Get valid columns for the table
-                db_cols_df = conn.execute(f"PRAGMA table_info('{table_name}')").df()
-                if not db_cols_df.empty:
-                    valid_cols_set = set(db_cols_df['name'].tolist())
-                    
-                    # Deduplicate DF columns
-                    df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
-                    
-                    # Filter
-                    existing_cols = [c for c in df_to_save.columns if c in valid_cols_set]
-                    if existing_cols:
-                        df_to_save = df_to_save[existing_cols]
-                        conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
-                        self.logger.info(f"Saved {len(df_to_save)} rows to {table_name}")
-                    else:
-                        self.logger.warning(f"No matching columns for {table_name} after filtering.")
-                else:
-                    self.logger.error(f"Could not get schema info for {table_name}")
+                db_cols = [c[0] for c in conn.execute(f"DESCRIBE {table_name}").fetchall()]
+                # Remove duplicates and filter
+                df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
+                valid_cols = [c for c in df_to_save.columns if c in db_cols]
+                if not valid_cols:
+                    self.logger.warning(f"No matching columns for {table_name}")
+                    return
+                df_to_save = df_to_save[valid_cols]
 
-            except Exception as insert_err:
-                self.logger.error(f"Error inserting into {table_name}: {insert_err}")
+                # ENFORCE TYPES BASED ON SCHEMA
+                df_to_save = utils.enforce_schema(df_to_save, table_name)
+
+            except Exception as e:
+                self.logger.error(f"Could not verify columns for {table_name}: {e}")
+                return
+
+            # 4. Build and Execute UPSERT
+            pk_cols = avs.TABLE_PKS.get(table_name, [])
+
+            # Filter out NULL PKs (Result of strict coercion on invalid data)
+            if pk_cols:
+                initial_len = len(df_to_save)
+                # Check for NaNs/NaTs in PK columns
+                # We need to ensure columns exist before checking
+                valid_pk_cols = [c for c in pk_cols if c in df_to_save.columns]
+                
+                if valid_pk_cols:
+                     df_to_save.dropna(subset=valid_pk_cols, inplace=True)
+                     
+                dropped = initial_len - len(df_to_save)
+                if dropped > 0:
+                    self.logger.warning(f"Dropped {dropped} rows with invalid Primary Key/Date for {table_name}")
+
+                if df_to_save.empty:
+                    self.logger.warning(f"No valid data remaining for {table_name} after cleaning.")
+                    return
+
+            if not pk_cols:
+                # Fallback to standard insert if no PK defined
+                conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
+                self.logger.info(f"Inserted {len(df_to_save)} rows into {table_name}")
+                return
+
+            # Identify columns to update (all non-PK columns in the dataframe)
+            update_cols = [c for c in df_to_save.columns if c not in pk_cols]
+            
+            pk_str = ", ".join([f'"{c}"' for c in pk_cols])
+            if update_cols:
+                update_str = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
+                conflict_action = f"DO UPDATE SET {update_str}"
+            else:
+                conflict_action = "DO NOTHING"
+
+            conn.execute(f"""
+                INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
+                ON CONFLICT ({pk_str}) {conflict_action}
+            """)
+            self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
 
         except Exception as e:
-            self.logger.error(f"Error save flow for {endpoint_name}: {e}")
-
-        finally:
-            if should_close:
-                conn.close()
+            self.logger.error(f"Error in save flow for {endpoint_name} (Table: {table_name}): {e}", exc_info=True)
 
     def fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False, min_required_date: Optional[datetime] = None) -> pd.DataFrame:
         """
@@ -505,7 +506,7 @@ class AlphaVantageClient:
                     self.logger.info(f"Loading from cache: {filepath}")
                     
                     if "dt" in df.columns:
-                        df = df.assign(dt=pd.to_datetime(df["dt"]))
+                        df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
                         df.set_index("dt", inplace=True)
                         df.index.name = "dt"
 
@@ -713,42 +714,32 @@ class AlphaVantageClient:
         if not tasks:
             return pd.DataFrame()
 
-        max_workers = settings.get("MaxConcurrentRequests", 5)
         all_dfs = []
-        
-        self.logger.info(f"Starting execution of {len(tasks)} tasks with {max_workers} workers.")
+        self.logger.info(f"Starting execution of {len(tasks)} tasks sequentially.")
 
         min_required_datetime = pd.to_datetime(end_date).tz_localize("UTC") if end_date else None
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Map futures to tasks
-            future_to_task = {
-                executor.submit(
-                    self.fetch_and_cache_data, 
-                    endpoint_name, 
-                    params, 
-                    force_refresh,
-                    min_required_datetime
-                ): (endpoint_name, params)
-                for endpoint_name, params in tasks
-            }
+        # Progress bar
+        with tqdm(total=len(tasks), unit="req", desc="Fetching Data") as pbar:
+            for endpoint_name, params in tasks:
+                try:
+                    df = self.fetch_and_cache_data(
+                        endpoint_name, 
+                        params, 
+                        force_refresh,
+                        min_required_datetime
+                    )
+                    
+                    if not df.empty and len(df.dropna()) > 0:
+                        all_dfs.append(df)
+                    
+                    pbar.update(1)
+                    symbol_info = f" ({params.get('symbol')})" if 'symbol' in params else ""
+                    pbar.set_postfix_str(f"Last: {endpoint_name}{symbol_info}", refresh=False)
 
-            # Progress bar
-            with tqdm(total=len(tasks), unit="req", desc="Fetching Data") as pbar:
-                for future in as_completed(future_to_task):
-                    endpoint_name, params = future_to_task[future]
-                    try:
-                        df = future.result()
-                        if not df.empty and len(df.dropna()) > 0:
-                            all_dfs.append(df)
-                        
-                        pbar.update(1)
-                        symbol_info = f" ({params.get('symbol')})" if 'symbol' in params else ""
-                        pbar.set_postfix_str(f"Last: {endpoint_name}{symbol_info}", refresh=False)
-
-                    except Exception as e:
-                        self.logger.error(f"Task failed for {endpoint_name}: {e}")
-                        pbar.update(1)
+                except Exception as e:
+                    self.logger.error(f"Task failed for {endpoint_name}: {e}")
+                    pbar.update(1)
 
         if not all_dfs:
             self.logger.warning("No data returned from any tasks.")
