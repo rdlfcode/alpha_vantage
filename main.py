@@ -21,7 +21,7 @@ root_logger.addHandler(file_handler)
 logger = logging.getLogger(__name__)
 
 def main():
-    logger.info("Starting Alpha Vantage Data Updater...")
+    logger.info("==================Starting Alpha Vantage Data Updater==================")
 
     # Ensure tables exist
     conn = duckdb.connect(settings.get("db_path"))

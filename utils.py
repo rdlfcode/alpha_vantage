@@ -28,7 +28,7 @@ def get_default_params(endpoint_name: str) -> dict:
          if isinstance(values, list):
             # Use the first value as the default for list-based params
             params[param] = values[0]
-         elif values is None or values == "string":
+         elif values == "string":
             # Skip string parameters like 'symbol' which are handled separately
             continue
          else:

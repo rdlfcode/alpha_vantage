@@ -429,6 +429,9 @@ class AlphaVantageClient:
                 if valid_pk_cols:
                      df_to_save.dropna(subset=valid_pk_cols, inplace=True)
                      
+                     # Deduplicate based on PKs to avoid ConstraintException within batch
+                     df_to_save.drop_duplicates(subset=valid_pk_cols, inplace=True)
+                     
                 dropped = initial_len - len(df_to_save)
                 if dropped > 0:
                     self.logger.warning(f"Dropped {dropped} rows with invalid Primary Key/Date for {table_name}")
@@ -453,11 +456,16 @@ class AlphaVantageClient:
             else:
                 conflict_action = "DO NOTHING"
 
-            conn.execute(f"""
-                INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
-                ON CONFLICT ({pk_str}) {conflict_action}
-            """)
-            self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
+            try:
+                conn.execute(f"""
+                    INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
+                    ON CONFLICT ({pk_str}) {conflict_action}
+                """)
+                self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
+            except duckdb.ConstraintException as e:
+                 self.logger.info(f"Ignored Constraint Error (Duplicate Key) for {table_name}: {e}")
+            except Exception as e:
+                 raise e
 
         except Exception as e:
             self.logger.error(f"Error in save flow for {endpoint_name} (Table: {table_name}): {e}", exc_info=True)
@@ -644,9 +652,9 @@ class AlphaVantageClient:
                     if not self._should_fetch(symbol, endpoint_name, task_params) and not force_refresh:
                         continue
 
-                    if "date" in params.keys():
-                        # ... (Existing Date Logic - could be optimized similarly but leaving as involves sub-dates)
-                         # Determine date range
+                    # Only endpoint with HISTORICAL_OPTIONS
+                    if endpoint_name == "HISTORICAL_OPTIONS":
+                        # Determine date range
                         s_date = pd.to_datetime(start_date)
                         e_date = pd.to_datetime(end_date)
                         
