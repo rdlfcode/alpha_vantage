@@ -8,13 +8,58 @@ from typing import List, Dict, Optional, Union
 from pathlib import Path
 from datetime import datetime
 import logging
-from settings import settings
-import alpha_vantage_schema as avs
+from data.settings import settings
+import data.alpha_vantage_schema as avs
 import numpy as np
 from decimal import Decimal, InvalidOperation
 
+import re
 logger = logging.getLogger(__name__)
 
+
+def normalize_to_camel_case(text: str) -> str:
+    """
+    Convert a string to camelCase.
+    
+    Examples:
+        "date" -> "date"
+        "Fiscal Date Ending" -> "fiscalDateEnding"
+        "fiscal_date_ending" -> "fiscalDateEnding"
+        "EPS" -> "eps"
+        "52WeekHigh" -> "52WeekHigh"
+        "PE Ratio" -> "peRatio"
+    """
+    if not isinstance(text, str):
+        return str(text)
+        
+    # Remove special characters that shouldn't be part of the name
+    # We keep alphanumeric, underscore, hyphens, and spaces for splitting
+    text = re.sub(r'[^a-zA-Z0-9_\-\s\.]', '', text)
+    
+    # Split by underscore, hyphen, space, or dot
+    words = re.split(r'[_\-\s\.]+', text)
+    
+    # Remove empty strings from split
+    words = [w for w in words if w]
+    
+    if not words:
+        return ""
+        
+    first_word = words[0]
+    if first_word.isupper():
+        first_word = first_word.lower()
+    else:
+        first_word = first_word[:1].lower() + first_word[1:]
+        
+    # Handle subsequent words: Capitalize first letter
+    subsequent_words = []
+    for w in words[1:]:
+        if w.isupper():
+             subsequent_words.append(w.capitalize())
+        else:
+            subsequent_words.append(w[:1].upper() + w[1:])
+            
+    return first_word + "".join(subsequent_words)
 
 def get_default_params(endpoint_name: str) -> dict:
    """
@@ -28,8 +73,9 @@ def get_default_params(endpoint_name: str) -> dict:
          if isinstance(values, list):
             # Use the first value as the default for list-based params
             params[param] = values[0]
-         elif values == "string":
-            # Skip string parameters like 'symbol' which are handled separately
+         elif values == "string" and param != "date":
+            # Skip string parameters like 'symbol' which
+            # are handled separately (but keep 'date')
             continue
          else:
             params[param] = values

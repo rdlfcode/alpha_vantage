@@ -19,10 +19,10 @@ from typing import Optional, Dict, List, Union
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-import utils
-from rate_limiter import RateLimiter
-from settings import settings
-import alpha_vantage_schema as avs
+import data.utils as data_utils
+from data.rate_limiter import RateLimiter
+from data.settings import settings
+import data.alpha_vantage_schema as avs
 
 # Load environment variables
 load_dotenv()
@@ -72,7 +72,7 @@ class AlphaVantageClient:
         elif isinstance(db_conn, str):
             self.conn = duckdb.connect(db_conn)
         else:
-            self.conn = duckdb.connect(settings.get("db_path", "data/alpha_vantage.db"))
+            self.conn = duckdb.connect(settings.get("db_name", "data/alpha_vantage.db"))
 
     def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str, None]]:
         """
@@ -357,6 +357,12 @@ class AlphaVantageClient:
             except Exception as utc_err:
                  self.logger.warning(f"Could not convert dt to UTC: {utc_err}")
 
+        # NORMALIZE COLUMNS TO CAMELCASE
+        if not df.empty:
+            df.rename(columns=lambda x: data_utils.normalize_to_camel_case(x), inplace=True)
+            if df.index.name:
+                df.index.name = data_utils.normalize_to_camel_case(df.index.name)
+
         return df
 
     def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
@@ -385,7 +391,7 @@ class AlphaVantageClient:
             
             # Special Handling for MACRO (Wide table, update specific column)
             if table_name == "MACRO":
-                col_name = endpoint_name.lower()
+                col_name = data_utils.normalize_to_camel_case(endpoint_name)
                 if col_name not in df_to_save.columns:
                     # Heuristics to find the value column if name doesn't match endpoint
                     candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
@@ -410,7 +416,7 @@ class AlphaVantageClient:
                 df_to_save = df_to_save[valid_cols]
 
                 # ENFORCE TYPES BASED ON SCHEMA
-                df_to_save = utils.enforce_schema(df_to_save, table_name)
+                df_to_save = data_utils.enforce_schema(df_to_save, table_name)
 
             except Exception as e:
                 self.logger.error(f"Could not verify columns for {table_name}: {e}")
@@ -486,7 +492,7 @@ class AlphaVantageClient:
         """
         if not force_refresh:
             # 1. Try DB first
-            df = utils.get_from_db(self.conn, endpoint_name, params)
+            df = data_utils.get_from_db(self.conn, endpoint_name, params)
             if not df.empty:
                 if min_required_date:
                     latest_dt = df.index.max()
@@ -507,7 +513,7 @@ class AlphaVantageClient:
                     return df
 
             # 2. Try Parquet Cache
-            filepath = utils.generate_filepath(self.data_dir, endpoint_name, params)
+            filepath = data_utils.generate_filepath(self.data_dir, endpoint_name, params)
             if filepath.exists():
                 try:
                     df = pd.read_parquet(filepath, engine='pyarrow')
@@ -550,7 +556,7 @@ class AlphaVantageClient:
 
         # 3. Save to Parquet (Redundancy)
         # Generate cache filename
-        filepath = utils.generate_filepath(self.data_dir, endpoint_name, params)
+        filepath = data_utils.generate_filepath(self.data_dir, endpoint_name, params)
         try:
             filepath.parent.mkdir(parents=True, exist_ok=True)
             df.to_parquet(filepath, engine='pyarrow')
@@ -577,12 +583,12 @@ class AlphaVantageClient:
         """
         try:
             # 1. Get latest date from DB
-            latest_dt = utils.get_latest_date_from_db(self.conn, endpoint, params)
+            latest_dt = data_utils.get_latest_date_from_db(self.conn, endpoint, params)
             if not latest_dt:
                 return True # No data, must fetch
 
             # 2. Determine comparison time (Current time in Market Timezone)
-            tz_str = utils.get_exchange_timezone(self.conn, symbol)
+            tz_str = data_utils.get_exchange_timezone(self.conn, symbol)
             try:
                 # We need a timezone aware current time
                 # Using pandas for easy timezone handling
@@ -607,98 +613,6 @@ class AlphaVantageClient:
             return True
         except Exception:
             return True
-
-    def get_data(
-        self,
-        symbols: Optional[List[str]] = None,
-        endpoints: Optional[Dict[str, Dict]] = None,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        force_refresh: bool = False,
-    ) -> pd.DataFrame:
-        """
-        Fetches, parses, and caches data for given symbols and endpoints.
-        
-        Args:
-            symbols: List of stock symbols to fetch. Defaults to reading stocks.txt.
-            endpoints: Dictionary of endpoints and parameters. Defaults to default endpoints.
-            start_date: Start date for time series data.
-            end_date: End date for time series data.
-            force_refresh: If True, force fetch from API.
-
-        Returns:
-            Combined DataFrame with all data.
-        """
-        try:
-            symbols = symbols or utils.read_stock_symbols()
-            endpoints = endpoints or utils.get_endpoints()
-            end_date = end_date or datetime.now().strftime("%Y-%m-%d")
-            start_date = start_date or (pd.to_datetime(end_date) - pd.DateOffset(years=15)).strftime("%Y-%m-%d")
-
-            # --- Build Task List ---
-            tasks = []
-            
-            # 1. Symbol-specific tasks
-            avs.SYMBOL_ENDPOINTS = {
-                k: v for k, v in endpoints.items() if k in avs.SYMBOL_ENDPOINTS
-            }
-            
-            for symbol in symbols:
-                for endpoint_name, params in avs.SYMBOL_ENDPOINTS.items():
-                    # Create a copy of params
-                    task_params = params.copy()
-                    task_params["symbol"] = symbol
-                    
-                    if not self._should_fetch(symbol, endpoint_name, task_params) and not force_refresh:
-                        continue
-
-                    # Only endpoint with HISTORICAL_OPTIONS
-                    if endpoint_name == "HISTORICAL_OPTIONS":
-                        # Determine date range
-                        s_date = pd.to_datetime(start_date)
-                        e_date = pd.to_datetime(end_date)
-                        
-                        try:
-                            table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
-                            existing_df = self.conn.execute(f"SELECT DISTINCT dt FROM {table_name} WHERE symbol = '{symbol}' ORDER BY dt").df()
-                            if not existing_df.empty:
-                                existing_dates = pd.to_datetime(existing_df['dt']).dt.normalize() # Ensure normalize
-                                if existing_dates.tz:
-                                     existing_dates = existing_dates.tz_convert(None) # removing tz for comparison with simple range
-                            else:
-                                existing_dates = pd.Index([])
-                        except Exception:
-                            existing_dates = pd.Index([])
-
-                        full_range = pd.date_range(start=s_date, end=e_date)
-                        
-                        # Normalize full_range
-                        full_range = full_range.normalize()
-                        
-                        # Set operation
-                        needed_dates = full_range.difference(existing_dates)
-                        
-                        for date in needed_dates:
-                            p = task_params.copy()
-                            p["date"] = date.strftime("%Y-%m-%d")
-                            tasks.append((endpoint_name, p))
-                    else:
-                        tasks.append((endpoint_name, task_params))
-
-            # 2. Macro-economic tasks
-            avs.MACRO_ENDPOINTS_map = {
-                k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS
-            }
-            for endpoint_name, params in avs.MACRO_ENDPOINTS_map.items():
-                if not self._should_fetch("MACRO", endpoint_name, params) and not force_refresh:
-                    continue
-                tasks.append((endpoint_name, params))
-
-            return self._execute_tasks(tasks, force_refresh, start_date, end_date)
-
-        except Exception as e:
-            self.logger.error(f"Error in get_data: {e}", exc_info=True)
-            return pd.DataFrame()
 
     def _execute_tasks(
         self, 
@@ -794,28 +708,90 @@ class AlphaVantageClient:
         
         return combined_df
 
-    def get_dataset_from_db(self, sql_query: str, conn: Optional[DuckDBPyConnection] = None) -> pd.DataFrame:
+    def get_data(
+        self,
+        symbols: Optional[List[str]] = None,
+        endpoints: Optional[Dict[str, Dict]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        force_refresh: bool = False,
+    ) -> pd.DataFrame:
         """
-        Execute SQL query against the database and return results as DataFrame.
-
+        Fetches, parses, and caches data for given symbols and endpoints.
+        
         Args:
-           sql_query: SQL query to execute.
-           conn: Optional explicit connection to use.
+            symbols: List of stock symbols to fetch. Defaults to reading stocks.txt.
+            endpoints: Dictionary of endpoints and parameters. Defaults to default endpoints.
+            start_date: Start date for time series data.
+            end_date: End date for time series data.
+            force_refresh: If True, force fetch from API.
 
         Returns:
-           Query results as DataFrame.
+            Combined DataFrame with all data.
         """
-        should_close = False
         try:
-            if conn is None:
-                # Use class connection or create new one if path is unknown (fallback)
-                conn = self.conn
+            symbols = symbols or data_utils.read_stock_symbols()
+            endpoints = endpoints or data_utils.get_endpoints()
+            end_date = end_date or datetime.now().strftime("%Y-%m-%d")
+            start_date = start_date or (pd.to_datetime(end_date) - pd.DateOffset(years=15)).strftime("%Y-%m-%d")
+
+            # --- Build Task List ---
+            tasks = []
             
-            df = conn.execute(sql_query).df()
-            return df
+            # 1. Symbol-specific tasks
+            avs.SYMBOL_ENDPOINTS = {k: v for k, v in endpoints.items() if k in avs.SYMBOL_ENDPOINTS}
+            
+            for symbol in symbols:
+                for endpoint_name, params in avs.SYMBOL_ENDPOINTS.items():
+                    # Create a copy of params
+                    task_params = params.copy()
+                    task_params["symbol"] = symbol
+                    
+                    if not self._should_fetch(symbol, endpoint_name, task_params) and not force_refresh:
+                        continue
+
+                    # Only endpoint with HISTORICAL_OPTIONS
+                    if "date" in params:
+                        # Determine date range
+                        s_date = pd.to_datetime(start_date)
+                        e_date = pd.to_datetime(end_date)
+                        
+                        try:
+                            table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
+                            existing_df = self.conn.execute(f"SELECT DISTINCT dt FROM {table_name} WHERE symbol = '{symbol}' ORDER BY dt").df()
+                            if not existing_df.empty:
+                                existing_dates = pd.to_datetime(existing_df['dt']).dt.normalize() # Ensure normalize
+                                if existing_dates.tz:
+                                     existing_dates = existing_dates.tz_convert(None) # removing tz for comparison with simple range
+                            else:
+                                existing_dates = pd.Index([])
+                        except Exception:
+                            existing_dates = pd.Index([])
+
+                        full_range = pd.date_range(start=s_date, end=e_date)
+                        
+                        # Normalize full_range
+                        full_range = full_range.normalize()
+                        
+                        # Set operation
+                        needed_dates = full_range.difference(existing_dates)
+                        
+                        for date in needed_dates:
+                            p = task_params.copy()
+                            p["date"] = date.strftime("%Y-%m-%d")
+                            tasks.append((endpoint_name, p))
+                    else:
+                        tasks.append((endpoint_name, task_params))
+
+            # 2. Macro-economic tasks
+            avs.MACRO_ENDPOINTS_map = {k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS}
+            for endpoint_name, params in avs.MACRO_ENDPOINTS_map.items():
+                if not self._should_fetch("MACRO", endpoint_name, params) and not force_refresh:
+                    continue
+                tasks.append((endpoint_name, params))
+
+            return self._execute_tasks(tasks, force_refresh, start_date, end_date)
+
         except Exception as e:
-            self.logger.error(f"Error executing query: {e}")
+            self.logger.error(f"Error in get_data: {e}", exc_info=True)
             return pd.DataFrame()
-        finally:
-             if should_close:
-                 conn.close()

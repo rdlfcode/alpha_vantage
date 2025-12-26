@@ -1,13 +1,13 @@
 
+from nbformat import read
 import duckdb
 import pandas as pd
 from pathlib import Path
-from settings import settings
-from alpha_vantage_schema import TABLE_SCHEMAS
+from data.settings import settings
 
 def get_db_summary():
-    db_path = Path(settings.get("db_path", "data/alpha_vantage.db"))
-    conn = duckdb.connect(str(db_path))
+    db_path = Path(settings.get("data_dir"), settings.get("db_name"))
+    conn = duckdb.connect(str(db_path), read_only=True)
     
     # Get all tables
     tables = conn.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='main' ORDER BY table_name").fetchall()

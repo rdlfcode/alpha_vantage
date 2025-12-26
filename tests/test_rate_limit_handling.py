@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import logging
-from alpha_vantage import AlphaVantageClient
+from data.alpha_vantage import AlphaVantageClient
 
 class TestRateLimitHandling(unittest.TestCase):
     @patch('requests.get')

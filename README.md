@@ -15,7 +15,6 @@ This project should be broken down into these parts:
 	2. Processing
 	3. Management
 	4. Storage
-	5. Encoding (for ML)
 2. ML
 	1. Time series and target specification
 	2. Encoding/data structure analysis
@@ -50,7 +49,7 @@ There should be a setting in the json file for granularity of storage with a def
 
 Store both raw and processed datasets. I have a lot of storage so it's worth storing both if it avoid recalculating in the future.
 
-Store all possible metrics when hypertuning. Models should be compared using RMSE (but can be configured in settings).
+Store all possible metrics when hypertuning. Models should be compared using MAPE (but can be configured in settings).
 
 The statistical models you mentioned seem great. I would also include linear and exponential regression and FFT.
 
@@ -58,7 +57,7 @@ Test all memory implementations for the titans architecture.
 
 User configurable prediction horizon, defaulting to 90 days.
 
-All of the main metrics for both investing and model accuracy should be stored. RMSE will be the default for comparing model accuracy, and I would like a combination of alpha (compared to S&P) and Sharpe ratio for portfolio metrics.
+All of the main metrics for both investing and model accuracy should be stored. MAPE will be the default for comparing model accuracy, and I would like a combination of alpha (compared to S&P) and Sharpe ratio for portfolio metrics.
 
 I've thought about hyper-tuning ranges, and I think it would be smart to have it intelligently set it. By this I mean if the optimal value is within 10% of the start or end of the range, increase or reduce it by 50%, this way it adapts to other changed parameters which could make the optimal value out of range.
 
@@ -80,7 +79,7 @@ When drilling down, I think it would be good if there were a list of tickers/pot
 
 The json configuration should be as extensive as possible. Everything should be in the user-defined file, a separate file will store the best settings.
 
-In the best settings json file, it should store everything that will be dynamically updated. This will include hyperparameter ranges as well. We won't have api keys or db connections stored in the best settings JSON file. If in the user file they set "best": true, then the best settings JSON file will overwrite the user defined. Best will be considered by the user "comparison metric" key, defaulting to "RMSE".
+In the best settings json file, it should store everything that will be dynamically updated. This will include hyperparameter ranges as well. We won't have api keys or db connections stored in the best settings JSON file. If in the user file they set "best": true, then the best settings JSON file will overwrite the user defined. Best will be considered by the user "comparison metric" key, defaulting to "MAPE".
 
 There will be a selection of different data transformations, train/test splits, and so forth. If the value is a tuple, it will assume it is a range and optimize for that. If it is a single value, it will not. For this reason, I think it would be best to have the user defined settings actually be a dictionary in a python file so that some values can be lists that are indexed so that you can see all possible options and change the selection by changing the index. For example,
 

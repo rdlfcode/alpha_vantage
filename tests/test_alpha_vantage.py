@@ -3,8 +3,8 @@ import pandas as pd
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from alpha_vantage import AlphaVantageClient
-from alpha_vantage_schema import SYMBOL_ENDPOINTS
+from data.alpha_vantage import AlphaVantageClient
+from data.alpha_vantage_schema import SYMBOL_ENDPOINTS
 
 # Mock data
 MOCK_TIME_SERIES_DAILY = {

@@ -7,8 +7,8 @@ import os
 # Add parent directory to path so we can import utils and settings
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import utils
-import alpha_vantage_schema as avs
+import data.utils
+import data.alpha_vantage_schema as avs
 
 class TestSchemaEnforcement(unittest.TestCase):
     def setUp(self):

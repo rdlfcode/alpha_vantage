@@ -1,8 +1,8 @@
 import duckdb
 import logging
-from settings import settings
-from alpha_vantage import AlphaVantageClient
-from alpha_vantage_schema import ENDPOINT_TO_TABLE_MAP, TABLE_SCHEMAS, DEFAULT_ENDPOINTS
+from data.settings import settings
+from data.alpha_vantage import AlphaVantageClient
+from data.alpha_vantage_schema import ENDPOINT_TO_TABLE_MAP, TABLE_SCHEMAS, DEFAULT_ENDPOINTS
 
 # Configure logging
 root_logger = logging.getLogger()
@@ -24,8 +24,10 @@ def main():
     logger.info("==================Starting Alpha Vantage Data Updater==================")
 
     # Ensure tables exist
-    conn = duckdb.connect(settings.get("db_path"))
+    db_path = Path(settings.get("data_dir"), settings.get("db_name"))
+    conn = duckdb.connect(str(db_path), read_only=True)
     tables = set()
+
     for endpoint_name in DEFAULT_ENDPOINTS:
         tables.add(ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper())
 
@@ -39,6 +41,7 @@ def main():
 
     # Update data
     df = client.get_data()
+    df.to_parquet("full.parquet", engine="pyarrow")
 
 if __name__ == "__main__":
    main()
