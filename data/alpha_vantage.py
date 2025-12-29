@@ -14,13 +14,14 @@ import logging
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Dict, List, Union, Tuple, Set
+from typing import Optional, Dict, List, Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 from tqdm import tqdm
 from dotenv import load_dotenv
 
+from data.cleaning import clean_data
 import data.utils as data_utils
 from data.rate_limiter import RateLimiter
 from data.settings import settings
@@ -37,14 +38,7 @@ class AlphaVantageClient:
 
     Handles data fetching, parsing, caching, and rate limiting in a unified interface.
     """
-    def __init__(
-        self,
-        api_key: Optional[str] = None,
-        data_dir: Optional[str] = None,
-        db_conn: Optional[Union[DuckDBPyConnection, str]] = None,
-        requests_per_minute: Optional[int] = None,
-        requests_per_day: Optional[int] = None,
-    ):
+    def __init__(self, api_key: Optional[str] = None, data_dir: Optional[str] = None, db_conn: Optional[Union[DuckDBPyConnection, str]] = None, requests_per_minute: Optional[int] = None, requests_per_day: Optional[int] = None):
         """
         Initialize the Alpha Vantage client.
 
@@ -289,35 +283,30 @@ class AlphaVantageClient:
                     if "dt" not in df.columns:
                         df["dt"] = pd.Timestamp.now("UTC")
                         
-                    # Standardize numeric columns based on schema
-                    # Note: Strict numeric coercion is now handled in _save_to_database
-                    # but we can optionally do a soft pass here or just leave it to save.
-                    # We will leave the rest of the logic to avoid "Conversion Error"
                     pass
 
             # Standardize datetime column
-            for col_name in [
-                "timestamp",
-                "fiscalDateEnding",
-                "date",
-                "transactionDate",
-                "transaction_date",
-            ]:
-                if col_name in df.columns:
-                    df.rename(columns={col_name: "dt"}, inplace=True)
+            date_candidates = [
+                "timestamp", "fiscaldateending", "date", 
+                "transactiondate", "transaction_date", "datadate",
+                "reporteddate"
+            ]
+            
+            for col in df.columns:
+                if col.lower() in date_candidates:
+                    df.rename(columns={col: "dt"}, inplace=True)
                     break 
+            
+            if "dt" not in df.columns and endpoint_name == "INSIDER_TRANSACTIONS":
+                 # Fallback for insider transactions if date has weird name
+                 for col in df.columns:
+                     if "date" in col.lower():
+                         df.rename(columns={col: "dt"}, inplace=True)
+                         break 
             
             # Standardize symbol column
             if "ticker" in df.columns and "symbol" not in df.columns:
                 df.rename(columns={"ticker": "symbol"}, inplace=True)
-
-            # Additional renames for Insider Transactions
-            rename_map = {
-                "executive": "reportingPerson",
-                "acquisition_or_disposal": "transactionType",
-                "share_price": "price"
-            }
-            df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
 
             if "dt" in df.columns:
                 df = df.assign(dt=pd.to_datetime(df["dt"], format="%Y-%m-%d"))
@@ -327,6 +316,12 @@ class AlphaVantageClient:
 
             if endpoint_name in avs.SYMBOL_ENDPOINTS and "symbol" in params.keys():
                 if not df.empty:
+                    # Remove any existing columns that match "symbol" case-insensitively
+                    # to avoid duplicates when we inject the param.
+                    cols_to_drop = [c for c in df.columns if c.lower() == "symbol"]
+                    if cols_to_drop:
+                        df.drop(columns=cols_to_drop, inplace=True)
+                    
                     df.loc[:, "symbol"] = params["symbol"]
 
             df.replace(["None", "none", "-", "0000-00-00"], [None, None, None, None], inplace=True)
@@ -335,7 +330,6 @@ class AlphaVantageClient:
             self.logger.error(f"Error parsing data for {endpoint_name}: {e}")
             return pd.DataFrame()
 
-        # ENSURE UTC
         if not df.empty and "dt" in df.columns:
             try:
                 if df["dt"].dt.tz is None:
@@ -355,15 +349,17 @@ class AlphaVantageClient:
             except Exception as utc_err:
                  self.logger.warning(f"Could not convert dt to UTC: {utc_err}")
 
-        # NORMALIZE COLUMNS TO CAMELCASE
         if not df.empty:
+            # Normalize column names to camelCase
             df.rename(columns=lambda x: data_utils.normalize_to_camel_case(x), inplace=True)
             if df.index.name:
                 df.index.name = data_utils.normalize_to_camel_case(df.index.name)
-
+            # Apply cleaning overrides
+            df = clean_data(endpoint_name, df)
+            
         return df
 
-    def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
+    def _save_to_database(self, endpoint_name: str, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
         """Save DataFrame to database using UPSERT logic."""
         if df.empty:
             return
@@ -383,22 +379,10 @@ class AlphaVantageClient:
 
                 df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
                 
-                if table_name == "MACRO":
-                    col_name = data_utils.normalize_to_camel_case(endpoint_name)
-                    if col_name not in df_to_save.columns:
-                        candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
-                        if candidates:
-                            df_to_save.rename(columns={candidates[0]: col_name}, inplace=True)
-                    
-                    if col_name in df_to_save.columns:
-                        df_to_save = df_to_save[["dt", col_name]]
-                    else:
-                        self.logger.warning(f"Could not map columns for MACRO table: {df_to_save.columns}")
-                        return
-
                 try:
                     db_cols = [c[0] for c in conn.execute(f"DESCRIBE {table_name}").fetchall()]
                     df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
+
                     valid_cols = [c for c in df_to_save.columns if c in db_cols]
                     if not valid_cols:
                         self.logger.warning(f"No matching columns for {table_name}")
@@ -441,10 +425,13 @@ class AlphaVantageClient:
                     conflict_action = "DO NOTHING"
 
                 try:
-                    conn.execute(f"""
-                        INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
-                        ON CONFLICT ({pk_str}) {conflict_action}
-                    """)
+                    if conflict_action == "DO NOTHING":
+                         conn.execute(f"INSERT OR IGNORE INTO {table_name} BY NAME SELECT * FROM df_to_save")
+                    else:
+                         conn.execute(f"""
+                            INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
+                            ON CONFLICT ({pk_str}) {conflict_action}
+                         """)
                     self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
                 except duckdb.BinderException as e:
                     if "conflict target" in str(e).lower() and "constraint" in str(e).lower():
@@ -488,7 +475,7 @@ class AlphaVantageClient:
             # 1. Try DB first
             df = data_utils.get_from_db(self.conn, endpoint_name, params)
             if not df.empty:
-                if min_required_date:
+                if min_required_date and "date" not in params:
                     latest_dt = df.index.max()
                     if latest_dt.tz is None:
                         latest_dt = latest_dt.tz_localize("UTC")
@@ -517,6 +504,10 @@ class AlphaVantageClient:
                         df.set_index("dt", inplace=True)
                         df.index.name = "dt"
 
+                    if "date" in params:
+                        self._save_to_database(endpoint_name, params, df)
+                        return df
+
                     if min_required_date and not df.empty:
                         latest_dt = None
                         if isinstance(df.index, pd.DatetimeIndex):
@@ -533,7 +524,7 @@ class AlphaVantageClient:
                         if latest_dt and latest_dt < min_required_date:
                             self.logger.info(f"Cached data is stale (latest: {latest_dt}). Fetching fresh...")
                         else:
-                            self._save_to_database(endpoint_name, params, df)
+                            self._save_to_database(endpoint_name, df)
                             return df
                     else:
                         return df
@@ -557,54 +548,9 @@ class AlphaVantageClient:
             self.logger.error(f"Error saving parquet cache: {e}")
 
         # 5. Save to Database
-        self._save_to_database(endpoint_name, params, df)
+        self._save_to_database(endpoint_name, df)
 
         return df
-
-    def _should_fetch(self, symbol: str, endpoint: str, params: Dict) -> bool:
-        """
-        Check if we should fetch data based on existing data freshness and market status.
-
-        Args:
-            symbol: Stock symbol.
-            endpoint: API endpoint name.
-            params: Query parameters.
-
-        Returns:
-            True if data should be fetched, False otherwise.
-        """
-        try:
-            # 1. Get latest date from DB
-            latest_dt = data_utils.get_latest_date_from_db(self.conn, endpoint, params)
-            if not latest_dt:
-                return True # No data, must fetch
-
-            # 2. Determine comparison time (Current time in Market Timezone)
-            tz_str = data_utils.get_exchange_timezone(self.conn, symbol)
-            try:
-                # We need a timezone aware current time
-                # Using pandas for easy timezone handling
-                now_utc = pd.Timestamp.now("UTC")
-                now_market = now_utc.tz_convert(tz_str)
-                
-                if latest_dt.tz is None:
-                    latest_dt = latest_dt.tz_localize("UTC")
-                
-                latest_market = latest_dt.tz_convert(tz_str)
-
-                # Check if data is up to date (e.g. daily data fetch once per day)
-                if "DAILY" in endpoint:
-                    if latest_market.date() >= now_market.date():
-                        self.logger.info(f"Data for {symbol} ({endpoint}) is up to date. Skipping.")
-                        return False
-                
-            except Exception as e:
-                self.logger.warning(f"Error in smart update check: {e}. Defaulting to fetch.")
-                return True
-                
-            return True
-        except Exception:
-            return True
 
     def _execute_tasks(
         self, 
@@ -739,9 +685,6 @@ class AlphaVantageClient:
                     task_params = params.copy()
                     task_params["symbol"] = symbol
                     
-                    if not self._should_fetch(symbol, endpoint_name, task_params) and not force_refresh:
-                        continue
-
                     # Only endpoint with HISTORICAL_OPTIONS
                     if "date" in params:
                         # Determine date range
@@ -778,8 +721,6 @@ class AlphaVantageClient:
             # 2. Macro-economic tasks
             avs.MACRO_ENDPOINTS_map = {k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS}
             for endpoint_name, params in avs.MACRO_ENDPOINTS_map.items():
-                if not self._should_fetch("MACRO", endpoint_name, params) and not force_refresh:
-                    continue
                 tasks.append((endpoint_name, params))
 
             return self._execute_tasks(tasks, force_refresh, start_date, end_date)
@@ -814,12 +755,7 @@ class AlphaVantageClient:
                 # Check for symbol column
                 cols = [c[0] for c in self.conn.execute(f"DESCRIBE {table_upper}").fetchall()]
                 if "symbol" not in cols:
-                    # For MACRO or other non-symbol tables, we might just track max dt overall?
-                    # For now, let's treat MACRO slightly differently or skip symbol grouping
                     if table_upper == "MACRO":
-                         # MACRO usually doesn't have symbol, or 'symbol' needs to be handled if added.
-                         # Logic in save uses 'dt'.
-                         # We can just get max dt
                          res = self.conn.execute(f"SELECT MAX(dt) FROM {table_upper}").fetchone()
                          if res and res[0]:
                              # Use a dummy symbol key for macro
@@ -857,7 +793,6 @@ class AlphaVantageClient:
         endpoints: Optional[Dict[str, Dict]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
-        force_refresh: bool = False,
         workers: Optional[int] = None
     ) -> None:
         """
@@ -874,9 +809,7 @@ class AlphaVantageClient:
         now_utc = pd.Timestamp.now("UTC")
         end_date_dt = pd.to_datetime(end_date).tz_localize("UTC") if end_date else now_utc
         
-        def needs_update(ep_name: str, sym: str, params: Dict) -> bool:
-            if force_refresh: return True
-            
+        def needs_update(ep_name: str, sym: str) -> bool:
             table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
             last_date = None
             if table in db_state:
@@ -920,7 +853,7 @@ class AlphaVantageClient:
                 params = base_params.copy()
                 params["symbol"] = sym
                 
-                if needs_update(ep_name, sym, params):
+                if needs_update(ep_name, sym):
                     if "date" in base_params:
                          s_date = pd.to_datetime(start_date or (now_utc - pd.DateOffset(years=2)))
                          if s_date.tz is None:
@@ -972,7 +905,7 @@ class AlphaVantageClient:
                      try:
                          df_p = pd.read_parquet(fp)
                          if not df_p.empty:
-                             self._save_to_database(ep, p, df_p)
+                             self._save_to_database(ep, df_p)
                              return
                      except Exception:
                          pass
@@ -993,7 +926,7 @@ class AlphaVantageClient:
                     self.logger.error(f"Parquet save failed: {e}")
 
                 # 5. Save DB
-                self._save_to_database(ep, p, df_res)
+                self._save_to_database(ep, df_res)
                     
             except Exception as e:
                 self.logger.error(f"Error processing {ep} {p}: {e}")

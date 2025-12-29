@@ -255,9 +255,10 @@ CREATE TABLE INSIDER_TRANSACTIONS (
    symbol TEXT,
    reportingPerson TEXT,
    transactionType TEXT,
+   securityType TEXT,
    shares BIGINT,
    price DECIMAL(20, 4),
-   PRIMARY KEY (symbol, dt, reportingPerson, transactionType, shares, price)
+   PRIMARY KEY (symbol, dt, reportingPerson, transactionType, securityType, shares, price)
 );""",
    "FUNDAMENTALS": """
 CREATE TABLE FUNDAMENTALS (
@@ -389,7 +390,7 @@ TABLE_PKS = {
    "TIME_SERIES_DAILY": ["symbol", "dt"],
    "TIME_SERIES_DAILY_ADJUSTED": ["symbol", "dt"],
    "GLOBAL_QUOTE": ["symbol", "dt"],
-   "INSIDER_TRANSACTIONS": ["symbol", "dt", "reportingPerson", "transactionType", "shares", "price"],
+   "INSIDER_TRANSACTIONS": ["symbol", "dt", "reportingPerson", "transactionType", "securityType", "shares", "price"],
    "FUNDAMENTALS": ["symbol", "periodType", "reportType", "metric", "dt"],
    "MACRO": ["dt"],
    "HISTORICAL_OPTIONS": ["symbol", "expiration", "strike", "type", "dt"],

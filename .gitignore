@@ -11,7 +11,7 @@ __pycache__/
 .vscode/
 
 # Data
-data/files
+# data/files
 *.db
 *.db.wal
 
