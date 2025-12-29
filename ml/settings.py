@@ -2,7 +2,7 @@ import torch
 
 ml_settings = {
     "system": {
-        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "device": None, # gets updated at the bottom
         "random_seed": 42,
     },
     "data": {
@@ -19,7 +19,7 @@ ml_settings = {
         "numerical_cols": [], # Auto-detect if empty
     },
     "model": {
-        "type": "TITANS", # Options: "Linear", "Exponential", "FFT", "Transformer", "TITANS"
+        "type": "TITANS", # Options: "Linear", "Exponential", "FFT", "Transformer", "T ITANS"
         "input_dim": None, # Will be set dynamically based on dataset
         "output_dim": 1,
         # Transformer / TITANS specific
@@ -38,5 +38,13 @@ ml_settings = {
         "fine_tune": False, # If True, enables specific fine-tuning logic
         "fine_tune_learning_rate": 1e-4,
         "freeze_encoder": False, # Option to freeze encoder during fine-tuning
-    }
+        "max_checkpoints_per_model": 3, # Keep top N best models
 }
+
+device = "cpu"
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.mps.is_available():
+    device = "mps"
+
+ml_settings["system"]["device"] = device

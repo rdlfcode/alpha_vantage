@@ -1,5 +1,6 @@
 import duckdb
 import logging
+from pathlib import Path
 from data.settings import settings
 from data.alpha_vantage import AlphaVantageClient
 from data.alpha_vantage_schema import ENDPOINT_TO_TABLE_MAP, TABLE_SCHEMAS, DEFAULT_ENDPOINTS
@@ -25,7 +26,7 @@ def main():
 
     # Ensure tables exist
     db_path = Path(settings.get("data_dir"), settings.get("db_name"))
-    conn = duckdb.connect(str(db_path), read_only=True)
+    conn = duckdb.connect(str(db_path), read_only=False)
     tables = set()
 
     for endpoint_name in DEFAULT_ENDPOINTS:
@@ -39,9 +40,11 @@ def main():
 
     client = AlphaVantageClient(db_conn=conn)
 
-    # Update data
-    df = client.get_data()
-    df.to_parquet("full.parquet", engine="pyarrow")
+    # Update data efficiently
+    client.smart_update(
+        start_date='2010-12-20',
+        end_date='2025-12-19'
+    )
 
 if __name__ == "__main__":
    main()

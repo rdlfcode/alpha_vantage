@@ -11,6 +11,9 @@ __pycache__/
 .vscode/
 
 # Data
-.env
+data/files
 *.db
 *.db.wal
+
+# Keys
+.env

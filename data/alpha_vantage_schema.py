@@ -369,6 +369,18 @@ CREATE TABLE OVERVIEW (
     exDividendDate DATE,
     dt TIMESTAMP,
     PRIMARY KEY (symbol)
+);""",
+    "MODEL_METADATA": """
+CREATE TABLE MODEL_METADATA (
+    dt TIMESTAMP,
+    model_name TEXT,
+    model_type TEXT,
+    training_run_id TEXT,
+    metrics JSON,
+    best_val_loss DECIMAL(20, 6),
+    dataset_size INT,
+    checkpoint_path TEXT,
+    PRIMARY KEY (training_run_id)
 );"""
 }
 
@@ -381,7 +393,8 @@ TABLE_PKS = {
    "FUNDAMENTALS": ["symbol", "periodType", "reportType", "metric", "dt"],
    "MACRO": ["dt"],
    "HISTORICAL_OPTIONS": ["symbol", "expiration", "strike", "type", "dt"],
-   "OVERVIEW": ["symbol", "dt"]
+   "OVERVIEW": ["symbol", "dt"],
+   "MODEL_METADATA": ["training_run_id"]
 }
 
 BASE_URL = "https://www.alphavantage.co/query"

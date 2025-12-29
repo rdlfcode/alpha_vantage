@@ -14,7 +14,9 @@ import logging
 from datetime import datetime
 from io import StringIO
 from pathlib import Path
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Tuple, Set
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -73,6 +75,8 @@ class AlphaVantageClient:
             self.conn = duckdb.connect(db_conn)
         else:
             self.conn = duckdb.connect(settings.get("db_name", "data/alpha_vantage.db"))
+        
+        self.db_lock = Lock()
 
     def _fetch_data(self, endpoint_name: str, params: Dict) -> Optional[Union[Dict, str, None]]:
         """
@@ -138,13 +142,7 @@ class AlphaVantageClient:
             else:
                 # requested CSV
                 if is_json:
-                     # If we executed the error check above and passed, it means we got a JSON that isn't an error?
-                     # But we wanted CSV. Alpha Vantage returns JSON for errors, but maybe empty JSON or weird JSON if verified above?
-                     # Usually if we want CSV, we shouldn't get JSON unless it Is an error.
-                     # But we already checked for error keys.
-                     # It might be that the API returned a JSON we can parse (like HISTORICAL_OPTIONS sometimes does)
-                     # or it's a valid JSON response despite us asking for CSV.
-                     # If it looks like valid data (not an error), let's return it.
+                     # If we executed the error check above and passed, it means we got a JSON that isn't an error.
                      self.logger.warning(f"Expected CSV but got JSON response for {endpoint_name}. Attempting to parse as JSON.")
                      return data
                 return data
@@ -366,129 +364,125 @@ class AlphaVantageClient:
         return df
 
     def _save_to_database(self, endpoint_name: str, params: Dict, df: pd.DataFrame, conn: Optional[DuckDBPyConnection] = None):
-        """
-        Save DataFrame to database using UPSERT (INSERT ... ON CONFLICT) logic.
-        """
+        """Save DataFrame to database using UPSERT logic."""
         if df.empty:
             return
 
         conn = conn or self.conn
         table_name = avs.ENDPOINT_TO_TABLE_MAP.get(endpoint_name, endpoint_name).upper()
         
-        try:
-            # 1. Ensure Table Exists
-            schema_sql = avs.TABLE_SCHEMAS.get(table_name)
-            if schema_sql:
-                # Use IF NOT EXISTS for simplicity
-                create_sql = schema_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
-                conn.execute(create_sql)
-            else:
-                self.logger.error(f"No schema found for {table_name}")
-                return
-
-            # 2. Prepare Data
-            df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
-            
-            # Special Handling for MACRO (Wide table, update specific column)
-            if table_name == "MACRO":
-                col_name = data_utils.normalize_to_camel_case(endpoint_name)
-                if col_name not in df_to_save.columns:
-                    # Heuristics to find the value column if name doesn't match endpoint
-                    candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
-                    if candidates:
-                        df_to_save.rename(columns={candidates[0]: col_name}, inplace=True)
-                
-                if col_name in df_to_save.columns:
-                    df_to_save = df_to_save[["dt", col_name]]
+        with self.db_lock:
+            try:
+                schema_sql = avs.TABLE_SCHEMAS.get(table_name)
+                if schema_sql:
+                    create_sql = schema_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+                    conn.execute(create_sql)
                 else:
-                    self.logger.warning(f"Could not map columns for MACRO table: {df_to_save.columns}")
+                    self.logger.error(f"No schema found for {table_name}")
                     return
 
-            # 3. Filter for valid database columns and Enforce Types
-            try:
-                db_cols = [c[0] for c in conn.execute(f"DESCRIBE {table_name}").fetchall()]
-                # Remove duplicates and filter
-                df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
-                valid_cols = [c for c in df_to_save.columns if c in db_cols]
-                if not valid_cols:
-                    self.logger.warning(f"No matching columns for {table_name}")
-                    return
-                df_to_save = df_to_save[valid_cols]
-
-                # ENFORCE TYPES BASED ON SCHEMA
-                df_to_save = data_utils.enforce_schema(df_to_save, table_name)
-
-            except Exception as e:
-                self.logger.error(f"Could not verify columns for {table_name}: {e}")
-                return
-
-            # 4. Build and Execute UPSERT
-            pk_cols = avs.TABLE_PKS.get(table_name, [])
-
-            # Filter out NULL PKs (Result of strict coercion on invalid data)
-            if pk_cols:
-                initial_len = len(df_to_save)
-                # Check for NaNs/NaTs in PK columns
-                # We need to ensure columns exist before checking
-                valid_pk_cols = [c for c in pk_cols if c in df_to_save.columns]
+                df_to_save = df.reset_index() if df.index.name == "dt" else df.copy()
                 
-                if valid_pk_cols:
-                     df_to_save.dropna(subset=valid_pk_cols, inplace=True)
-                     
-                     # Deduplicate based on PKs to avoid ConstraintException within batch
-                     df_to_save.drop_duplicates(subset=valid_pk_cols, inplace=True)
-                     
-                dropped = initial_len - len(df_to_save)
-                if dropped > 0:
-                    self.logger.warning(f"Dropped {dropped} rows with invalid Primary Key/Date for {table_name}")
+                if table_name == "MACRO":
+                    col_name = data_utils.normalize_to_camel_case(endpoint_name)
+                    if col_name not in df_to_save.columns:
+                        candidates = [c for c in df_to_save.columns if c not in ["dt", "date"]]
+                        if candidates:
+                            df_to_save.rename(columns={candidates[0]: col_name}, inplace=True)
+                    
+                    if col_name in df_to_save.columns:
+                        df_to_save = df_to_save[["dt", col_name]]
+                    else:
+                        self.logger.warning(f"Could not map columns for MACRO table: {df_to_save.columns}")
+                        return
 
-                if df_to_save.empty:
-                    self.logger.warning(f"No valid data remaining for {table_name} after cleaning.")
+                try:
+                    db_cols = [c[0] for c in conn.execute(f"DESCRIBE {table_name}").fetchall()]
+                    df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
+                    valid_cols = [c for c in df_to_save.columns if c in db_cols]
+                    if not valid_cols:
+                        self.logger.warning(f"No matching columns for {table_name}")
+                        return
+                    df_to_save = df_to_save[valid_cols]
+                    df_to_save = data_utils.enforce_schema(df_to_save, table_name)
+                except Exception as e:
+                    self.logger.error(f"Could not verify columns for {table_name}: {e}")
                     return
 
-            if not pk_cols:
-                # Fallback to standard insert if no PK defined
-                conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
-                self.logger.info(f"Inserted {len(df_to_save)} rows into {table_name}")
-                return
+                pk_cols = avs.TABLE_PKS.get(table_name, [])
 
-            # Identify columns to update (all non-PK columns in the dataframe)
-            update_cols = [c for c in df_to_save.columns if c not in pk_cols]
-            
-            pk_str = ", ".join([f'"{c}"' for c in pk_cols])
-            if update_cols:
-                update_str = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
-                conflict_action = f"DO UPDATE SET {update_str}"
-            else:
-                conflict_action = "DO NOTHING"
+                if pk_cols:
+                    initial_len = len(df_to_save)
+                    valid_pk_cols = [c for c in pk_cols if c in df_to_save.columns]
+                    
+                    if valid_pk_cols:
+                         df_to_save.dropna(subset=valid_pk_cols, inplace=True)
+                         df_to_save.drop_duplicates(subset=valid_pk_cols, inplace=True)
+                         
+                    dropped = initial_len - len(df_to_save)
+                    if dropped > 0:
+                        self.logger.warning(f"Dropped {dropped} rows with invalid Primary Key/Date for {table_name}")
 
-            try:
-                conn.execute(f"""
-                    INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
-                    ON CONFLICT ({pk_str}) {conflict_action}
-                """)
-                self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
-            except duckdb.ConstraintException as e:
-                 self.logger.info(f"Ignored Constraint Error (Duplicate Key) for {table_name}: {e}")
+                    if df_to_save.empty:
+                        return
+
+                if not pk_cols:
+                    conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save")
+                    self.logger.info(f"Inserted {len(df_to_save)} rows into {table_name}")
+                    return
+
+                update_cols = [c for c in df_to_save.columns if c not in pk_cols]
+                pk_str = ", ".join([f'"{c}"' for c in pk_cols])
+                
+                if update_cols:
+                    update_str = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
+                    conflict_action = f"DO UPDATE SET {update_str}"
+                else:
+                    conflict_action = "DO NOTHING"
+
+                try:
+                    conn.execute(f"""
+                        INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
+                        ON CONFLICT ({pk_str}) {conflict_action}
+                    """)
+                    self.logger.info(f"Upserted {len(df_to_save)} rows into {table_name}")
+                except duckdb.BinderException as e:
+                    if "conflict target" in str(e).lower() and "constraint" in str(e).lower():
+                        self.logger.warning(f"Constraint missing for {table_name}. Attempting to add UNIQUE INDEX or Manual Upsert.")
+                        try:
+                            index_name = f"idx_{table_name}_pk"
+                            conn.execute(f"CREATE UNIQUE INDEX IF NOT EXISTS {index_name} ON {table_name} ({pk_str})")
+                            conn.execute(f"""
+                                INSERT INTO {table_name} BY NAME SELECT * FROM df_to_save
+                                ON CONFLICT ({pk_str}) {conflict_action}
+                            """)
+                            self.logger.info(f"Added index and upserted {len(df_to_save)} rows into {table_name}")
+                        except Exception as index_err:
+                            self.logger.info(f"Index creation failed ({index_err}). Using Delete-Insert fallback.")
+                            
+                            temp_table = f"temp_{table_name}_{int(time.time()*1000)}"
+                            conn.register(temp_table, df_to_save)
+                            
+                            pk_tuple = f"({pk_str})"
+                            conn.execute(f"DELETE FROM {table_name} WHERE {pk_tuple} IN (SELECT {pk_tuple} FROM {temp_table})")
+                            conn.execute(f"INSERT INTO {table_name} BY NAME SELECT * FROM {temp_table}")
+                            conn.unregister(temp_table)
+                            self.logger.info(f"Manual upsert (delete-insert) completed for {table_name}")
+                    else:
+                        raise e
+
+                except duckdb.ConstraintException as e:
+                     self.logger.info(f"Ignored Constraint Error (Duplicate Key) for {table_name}: {e}")
+                except Exception as e:
+                     raise e
+
             except Exception as e:
-                 raise e
-
-        except Exception as e:
-            self.logger.error(f"Error in save flow for {endpoint_name} (Table: {table_name}): {e}", exc_info=True)
+                self.logger.error(f"Error in save flow for {endpoint_name} (Table: {table_name}): {e}", exc_info=True)
 
     def fetch_and_cache_data(self, endpoint_name: str, params: Dict, force_refresh: bool = False, min_required_date: Optional[datetime] = None) -> pd.DataFrame:
         """
         Fetches, parses, and caches data for a single endpoint call.
         Checks DB first, then falls back to Parquet cache, then API.
-
-        Args:
-            endpoint_name: API endpoint function name.
-            params: Parameters for the API call.
-            force_refresh: If True, skip DB/Cache and fetch from API.
-            min_required_date: If cached data is older than this, fetch fresh.
-
-        Returns:
-            DataFrame containing the requested data.
         """
         if not force_refresh:
             # 1. Try DB first
@@ -496,7 +490,6 @@ class AlphaVantageClient:
             if not df.empty:
                 if min_required_date:
                     latest_dt = df.index.max()
-                    # Ensure timezone awareness for comparison
                     if latest_dt.tz is None:
                         latest_dt = latest_dt.tz_localize("UTC")
                     else:
@@ -547,15 +540,14 @@ class AlphaVantageClient:
                 except Exception as e:
                     self.logger.error(f"Error reading parquet cache: {e}")
 
-        # 2. Fetch fresh data (API)
+        # 3. Fetch fresh data (API)
         raw_data = self._fetch_data(endpoint_name, params)
         df = self._parse_response(endpoint_name, raw_data, params)
 
         if df.empty:
             return df
 
-        # 3. Save to Parquet (Redundancy)
-        # Generate cache filename
+        # 4. Save to Parquet
         filepath = data_utils.generate_filepath(self.data_dir, endpoint_name, params)
         try:
             filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -564,7 +556,7 @@ class AlphaVantageClient:
         except Exception as e:
             self.logger.error(f"Error saving parquet cache: {e}")
 
-        # 4. Save to Database
+        # 5. Save to Database
         self._save_to_database(endpoint_name, params, df)
 
         return df
@@ -795,3 +787,227 @@ class AlphaVantageClient:
         except Exception as e:
             self.logger.error(f"Error in get_data: {e}", exc_info=True)
             return pd.DataFrame()
+
+    def _get_db_state(self) -> Dict[str, Dict[str, pd.Timestamp]]:
+        """
+        Retrieves the latest date for every symbol in every table.
+        
+        Returns:
+            Dictionary mapping TableName -> {Symbol -> LatestDate}
+        """
+        state = {}
+        tables = set(avs.ENDPOINT_TO_TABLE_MAP.values())
+        tables.add("MACRO") # Ensure MACRO is checked
+        
+        # Get existing tables in DB
+        try:
+            existing_tables = [t[0] for t in self.conn.execute("SHOW TABLES").fetchall()]
+        except Exception:
+            return {}
+
+        for table in tables:
+            table_upper = table.upper()
+            if table_upper not in existing_tables:
+                continue
+
+            try:
+                # Check for symbol column
+                cols = [c[0] for c in self.conn.execute(f"DESCRIBE {table_upper}").fetchall()]
+                if "symbol" not in cols:
+                    # For MACRO or other non-symbol tables, we might just track max dt overall?
+                    # For now, let's treat MACRO slightly differently or skip symbol grouping
+                    if table_upper == "MACRO":
+                         # MACRO usually doesn't have symbol, or 'symbol' needs to be handled if added.
+                         # Logic in save uses 'dt'.
+                         # We can just get max dt
+                         res = self.conn.execute(f"SELECT MAX(dt) FROM {table_upper}").fetchone()
+                         if res and res[0]:
+                             # Use a dummy symbol key for macro
+                             state[table_upper] = {"MACRO": pd.to_datetime(res[0])}
+                    continue
+                
+                if "dt" not in cols and "date" not in cols:
+                     continue
+                
+                dt_col = "dt" if "dt" in cols else "date"
+
+                # Query
+                query = f"SELECT symbol, MAX({dt_col}) as max_dt FROM {table_upper} GROUP BY symbol"
+                df_state = self.conn.execute(query).df()
+                
+                if not df_state.empty:
+                    # Convert to dictionary
+                    # Handle TZ
+                    df_state["max_dt"] = pd.to_datetime(df_state["max_dt"])
+                    if df_state["max_dt"].dt.tz is None:
+                        df_state["max_dt"] = df_state["max_dt"].dt.tz_localize("UTC")
+                    else:
+                        df_state["max_dt"] = df_state["max_dt"].dt.tz_convert("UTC")
+                        
+                    state[table_upper] = dict(zip(df_state["symbol"], df_state["max_dt"]))
+            
+            except Exception as e:
+                self.logger.warning(f"Could not build state for {table_upper}: {e}")
+        
+        return state
+
+    def smart_update(
+        self,
+        symbols: Optional[List[str]] = None,
+        endpoints: Optional[Dict[str, Dict]] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        force_refresh: bool = False,
+        workers: Optional[int] = None
+    ) -> None:
+        """
+        Efficiently updates data using parallel fetching and bulk DB checks.
+        """
+        symbols = symbols or data_utils.read_stock_symbols()
+        endpoints = endpoints or data_utils.get_endpoints()
+        max_workers = workers or settings.get("workers", 8)
+        
+        self.logger.info(f"Building database state for smart update (workers={max_workers})...")
+        db_state = self._get_db_state()
+        
+        tasks = []
+        now_utc = pd.Timestamp.now("UTC")
+        end_date_dt = pd.to_datetime(end_date).tz_localize("UTC") if end_date else now_utc
+        
+        def needs_update(ep_name: str, sym: str, params: Dict) -> bool:
+            if force_refresh: return True
+            
+            table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
+            last_date = None
+            if table in db_state:
+                last_date = db_state[table].get(sym)
+                
+            if not last_date:
+                return True
+                
+            if "INTRADAY" in ep_name:
+                if (now_utc - last_date).total_seconds() > 3600 * 4: 
+                     return True
+                return False
+
+            if "DAILY" in ep_name:
+                if last_date.date() >= now_utc.date():
+                    return False
+                if last_date.date() < now_utc.date():
+                    tz_str = data_utils.get_exchange_timezone(self.conn, sym)
+                    try:
+                        last_market = last_date.tz_convert(tz_str)
+                        now_market = now_utc.tz_convert(tz_str)
+                        if last_market.date() >= now_market.date():
+                            return False
+                    except:
+                        pass
+                    return True
+            
+            if ep_name in avs.FUNDAMENTAL_ENDPOINTS:
+                if (now_utc - last_date).days < 80:
+                    return False
+                return True
+
+            return True
+
+        sym_endpoints = {k: v for k, v in endpoints.items() if k in avs.SYMBOL_ENDPOINTS}
+        
+        # Parallelize Task Generation
+        def generate_tasks_for_symbol(sym):
+            local_tasks = []
+            for ep_name, base_params in sym_endpoints.items():
+                params = base_params.copy()
+                params["symbol"] = sym
+                
+                if needs_update(ep_name, sym, params):
+                    if "date" in base_params:
+                         s_date = pd.to_datetime(start_date or (now_utc - pd.DateOffset(years=2)))
+                         if s_date.tz is None:
+                             s_date = s_date.tz_localize("UTC")
+                         else:
+                             s_date = s_date.tz_convert("UTC")
+                             
+                         e_date = end_date_dt
+                         full_range = pd.date_range(s_date, e_date).normalize()
+                         
+                         try:
+                             table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
+                             existing = self.conn.execute(f"SELECT DISTINCT dt FROM {table} WHERE symbol = '{sym}'").df()
+                             existing_dates = pd.to_datetime(existing['dt']).dt.normalize().tz_localize(None)
+                             full_range_naive = full_range.tz_localize(None)
+                             needed = full_range_naive.difference(existing_dates)
+                             
+                             for d in needed:
+                                 p = params.copy()
+                                 p["date"] = d.strftime("%Y-%m-%d")
+                                 local_tasks.append((ep_name, p))
+                         except:
+                             pass
+                    else:
+                        local_tasks.append((ep_name, params))
+            return local_tasks
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_sym = {executor.submit(generate_tasks_for_symbol, sym): sym for sym in symbols}
+            for future in as_completed(future_to_sym):
+                try:
+                    tasks.extend(future.result())
+                except Exception as e:
+                    self.logger.error(f"Error generating tasks for symbol: {e}")
+        
+        # Macro Tasks
+        macro_endpoints = {k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS}
+        for ep_name, params in macro_endpoints.items():
+             tasks.append((ep_name, params))
+
+        self.logger.info(f"Generated {len(tasks)} tasks.")
+        
+        def process_task(task_tuple):
+            ep, p = task_tuple
+            try:
+                # 1. Check Parquet Cache
+                fp = data_utils.generate_filepath(self.data_dir, ep, p)
+                if fp.exists():
+                     try:
+                         df_p = pd.read_parquet(fp)
+                         if not df_p.empty:
+                             self._save_to_database(ep, p, df_p)
+                             return
+                     except Exception:
+                         pass
+
+                # 2. Fetch
+                raw = self._fetch_data(ep, p)
+                if not raw: return
+                
+                # 3. Parse
+                df_res = self._parse_response(ep, raw, p)
+                if df_res.empty: return
+                
+                # 4. Save Parquet
+                try:
+                    fp.parent.mkdir(parents=True, exist_ok=True)
+                    df_res.to_parquet(fp)
+                except Exception as e:
+                    self.logger.error(f"Parquet save failed: {e}")
+
+                # 5. Save DB
+                self._save_to_database(ep, p, df_res)
+                    
+            except Exception as e:
+                self.logger.error(f"Error processing {ep} {p}: {e}")
+
+        with tqdm(total=len(tasks), desc="Smart Update") as pbar:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = [executor.submit(process_task, t) for t in tasks]
+                
+                for future in as_completed(futures):
+                    pbar.update(1)
+                    try:
+                        future.result()
+                    except Exception:
+                         pass
+
+        self.logger.info("Smart update completed.")
+

@@ -6,6 +6,7 @@ settings = {
    ######### ALPHA VANTAGE #########
    "AlphaVantageRPM": 75,
    "AlphaVantageRPD": 1000000,
+   "workers": 12,
    "exchange_timezones": {
         "US/Eastern": ["NYSE", "NASDAQ", "NASDAQ NMSC", "AMEX", "BATS"],
         "Europe/London": ["LSE"],
