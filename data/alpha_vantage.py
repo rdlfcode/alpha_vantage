@@ -168,6 +168,13 @@ class AlphaVantageClient:
                 df = pd.read_csv(StringIO(data), na_values=["."])
 
             elif isinstance(data, dict):
+                # Detect "No data" message specifically for HISTORICAL_OPTIONS
+                if "message" in data and "No data for symbol" in str(data["message"]):
+                    self.logger.info(f"Received 'No data' message: {data['message']}")
+                    df = pd.DataFrame()
+                    df.attrs["no_data_found"] = True
+                    return df
+
                 # Parse JSON response
                 if any("Time Series" in k for k in data.keys()):
                     # Time series data
@@ -535,7 +542,7 @@ class AlphaVantageClient:
         raw_data = self._fetch_data(endpoint_name, params)
         df = self._parse_response(endpoint_name, raw_data, params)
 
-        if df.empty:
+        if df.empty and not df.attrs.get("no_data_found"):
             return df
 
         # 4. Save to Parquet
@@ -729,62 +736,99 @@ class AlphaVantageClient:
             self.logger.error(f"Error in get_data: {e}", exc_info=True)
             return pd.DataFrame()
 
-    def _get_db_state(self) -> Dict[str, Dict[str, pd.Timestamp]]:
+    def _scan_local_cache(self) -> dict:
         """
-        Retrieves the latest date for every symbol in every table.
-        
+        Returns a dictionary of all valid parquet file paths in the data directory.
+        Keys are unresolved filenames, Values are full resolved paths.
+        """
+        files = {}
+        base_dir = Path(self.data_dir, "files")
+        if not base_dir.exists():
+            return files
+            
+        for p in base_dir.rglob("*.parquet"):
+            files[str(p)] = True
+            
+        return files
+
+    def _get_detailed_db_state(self, endpoints: Dict[str, Dict]) -> Dict[str, Dict]:
+        """
+        Efficiently retrieves the state of the database to minimize queries.
         Returns:
-            Dictionary mapping TableName -> {Symbol -> LatestDate}
+            Dict[Table, Dict[Symbol/Key, State]]
         """
         state = {}
-        tables = set(avs.ENDPOINT_TO_TABLE_MAP.values())
-        tables.add("MACRO") # Ensure MACRO is checked
+        # Identify relevant tables
+        tables = set()
+        for ep in endpoints:
+            tables.add(avs.ENDPOINT_TO_TABLE_MAP.get(ep, ep).upper())
         
-        # Get existing tables in DB
+        # Add MACRO if needed
+        if any(ep in avs.MACRO_ENDPOINTS for ep in endpoints):
+            tables.add("MACRO")
+
         try:
-            existing_tables = [t[0] for t in self.conn.execute("SHOW TABLES").fetchall()]
+            existing_tables_df = self.conn.execute("SHOW TABLES").df()
+            if existing_tables_df.empty:
+                return {}
+            existing_tables = set(existing_tables_df['name'].str.upper())
         except Exception:
             return {}
 
         for table in tables:
-            table_upper = table.upper()
-            if table_upper not in existing_tables:
+            if table not in existing_tables:
                 continue
-
-            try:
-                # Check for symbol column
-                cols = [c[0] for c in self.conn.execute(f"DESCRIBE {table_upper}").fetchall()]
-                if "symbol" not in cols:
-                    if table_upper == "MACRO":
-                         res = self.conn.execute(f"SELECT MAX(dt) FROM {table_upper}").fetchone()
-                         if res and res[0]:
-                             # Use a dummy symbol key for macro
-                             state[table_upper] = {"MACRO": pd.to_datetime(res[0])}
-                    continue
-                
-                if "dt" not in cols and "date" not in cols:
-                     continue
-                
-                dt_col = "dt" if "dt" in cols else "date"
-
-                # Query
-                query = f"SELECT symbol, MAX({dt_col}) as max_dt FROM {table_upper} GROUP BY symbol"
-                df_state = self.conn.execute(query).df()
-                
-                if not df_state.empty:
-                    # Convert to dictionary
-                    # Handle TZ
-                    df_state["max_dt"] = pd.to_datetime(df_state["max_dt"])
-                    if df_state["max_dt"].dt.tz is None:
-                        df_state["max_dt"] = df_state["max_dt"].dt.tz_localize("UTC")
-                    else:
-                        df_state["max_dt"] = df_state["max_dt"].dt.tz_convert("UTC")
-                        
-                    state[table_upper] = dict(zip(df_state["symbol"], df_state["max_dt"]))
             
+            try:
+                # Check columns to decide query strategy
+                cols = [c[0] for c in self.conn.execute(f"DESCRIBE {table}").fetchall()]
+                
+                # Case 1: HISTORICAL_OPTIONS (Dense Date Data)
+                if table == "HISTORICAL_OPTIONS":
+                     # For options, we need the exact set of dates per symbol
+                     # Fetching all might be heavy, but it's the only way to accurately diff.
+                     # limit columns to reduce I/O
+                     query = f"SELECT symbol, dt FROM {table}"
+                     df = self.conn.execute(query).df()
+                     if not df.empty:
+                         df['dt'] = df['dt'].astype(str)
+                         # dict: symbol -> set of date strings
+                         state[table] = df.groupby('symbol')['dt'].apply(set).to_dict()
+                     continue
+
+                # Case 2: MACRO
+                if table == "MACRO":
+                    state[table] = {}
+                    macro_eps = [ep for ep in endpoints if avs.ENDPOINT_TO_TABLE_MAP.get(ep, ep).upper() == "MACRO"]
+                    for ep in macro_eps:
+                         col = ep.lower()
+                         if col in cols:
+                             res = self.conn.execute(f"SELECT MAX(dt) FROM {table} WHERE {col} IS NOT NULL").fetchone()
+                             if res and res[0]:
+                                 dt = pd.to_datetime(res[0])
+                                 if dt.tz is None: dt = dt.tz_localize("UTC")
+                                 else: dt = dt.tz_convert("UTC")
+                                 state[table][ep] = dt
+                    continue
+
+                # Case 3: Standard Time Series / Overview (Max Date per Symbol)
+                if ("dt" in cols or "date" in cols) and "symbol" in cols:
+                    dt_col = "dt" if "dt" in cols else "date"
+                    query = f"SELECT symbol, MAX({dt_col}) as max_dt FROM {table} GROUP BY symbol"
+                    df = self.conn.execute(query).df()
+                    if not df.empty:
+                        df["max_dt"] = pd.to_datetime(df["max_dt"])
+                        # Handle TZ
+                        if df["max_dt"].dt.tz is None:
+                             df["max_dt"] = df["max_dt"].dt.tz_localize("UTC")
+                        else:
+                             df["max_dt"] = df["max_dt"].dt.tz_convert("UTC")
+                        state[table] = dict(zip(df["symbol"], df["max_dt"]))
+                    continue
+
             except Exception as e:
-                self.logger.warning(f"Could not build state for {table_upper}: {e}")
-        
+                self.logger.warning(f"Error getting state for {table}: {e}")
+
         return state
 
     def smart_update(
@@ -796,117 +840,157 @@ class AlphaVantageClient:
         workers: Optional[int] = None
     ) -> None:
         """
-        Efficiently updates data using parallel fetching and bulk DB checks.
+        Efficiently updates data using parallel fetching and bulk DB checking.
         """
         symbols = symbols or data_utils.read_stock_symbols()
         endpoints = endpoints or data_utils.get_endpoints()
         max_workers = workers or settings.get("workers", 8)
         
-        self.logger.info(f"Building database state for smart update (workers={max_workers})...")
-        db_state = self._get_db_state()
-        
-        tasks = []
+        # Defaults
         now_utc = pd.Timestamp.now("UTC")
         end_date_dt = pd.to_datetime(end_date).tz_localize("UTC") if end_date else now_utc
+        s_date_default = pd.to_datetime(start_date or (now_utc - pd.DateOffset(years=2)))
+        if s_date_default.tz is None:
+            s_date_default = s_date_default.tz_localize("UTC")
+        else:
+            s_date_default = s_date_default.tz_convert("UTC")
+
+        self.logger.info("Phase 1: Inventorying Local Cache & Database State...")
         
-        def needs_update(ep_name: str, sym: str) -> bool:
-            table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
-            last_date = None
-            if table in db_state:
-                last_date = db_state[table].get(sym)
-                
-            if not last_date:
-                return True
-                
-            if "INTRADAY" in ep_name:
-                if (now_utc - last_date).total_seconds() > 3600 * 4: 
-                     return True
-                return False
-
-            if "DAILY" in ep_name:
-                if last_date.date() >= now_utc.date():
-                    return False
-                if last_date.date() < now_utc.date():
-                    tz_str = data_utils.get_exchange_timezone(self.conn, sym)
-                    try:
-                        last_market = last_date.tz_convert(tz_str)
-                        now_market = now_utc.tz_convert(tz_str)
-                        if last_market.date() >= now_market.date():
-                            return False
-                    except:
-                        pass
-                    return True
+        # Parallelize inventory steps
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_local = executor.submit(self._scan_local_cache)
+            future_db = executor.submit(self._get_detailed_db_state, endpoints)
             
-            if ep_name in avs.FUNDAMENTAL_ENDPOINTS:
-                if (now_utc - last_date).days < 80:
-                    return False
-                return True
+            local_cache_files = future_local.result()
+            db_state = future_db.result()
 
-            return True
+        self.logger.info(f"Inventory complete. Found {len(local_cache_files)} local files.")
 
+        api_tasks = []
+        db_tasks = []
+
+        # Identify Tasks
+        self.logger.info("Phase 2: Calculating Tasks...")
+        
         sym_endpoints = {k: v for k, v in endpoints.items() if k in avs.SYMBOL_ENDPOINTS}
         
-        # Parallelize Task Generation
-        def generate_tasks_for_symbol(sym):
-            local_tasks = []
-            for ep_name, base_params in sym_endpoints.items():
-                params = base_params.copy()
-                params["symbol"] = sym
-                
-                if needs_update(ep_name, sym):
-                    if "date" in base_params:
-                         s_date = pd.to_datetime(start_date or (now_utc - pd.DateOffset(years=2)))
-                         if s_date.tz is None:
-                             s_date = s_date.tz_localize("UTC")
-                         else:
-                             s_date = s_date.tz_convert("UTC")
-                             
-                         e_date = end_date_dt
-                         full_range = pd.date_range(s_date, e_date).normalize()
-                         
-                         try:
-                             table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
-                             existing = self.conn.execute(f"SELECT DISTINCT dt FROM {table} WHERE symbol = '{sym}'").df()
-                             existing_dates = pd.to_datetime(existing['dt']).dt.normalize().tz_localize(None)
-                             full_range_naive = full_range.tz_localize(None)
-                             needed = full_range_naive.difference(existing_dates)
-                             
-                             for d in needed:
-                                 p = params.copy()
-                                 p["date"] = d.strftime("%Y-%m-%d")
-                                 local_tasks.append((ep_name, p))
-                         except:
-                             pass
-                    else:
-                        local_tasks.append((ep_name, params))
-            return local_tasks
-
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_sym = {executor.submit(generate_tasks_for_symbol, sym): sym for sym in symbols}
-            for future in as_completed(future_to_sym):
-                try:
-                    tasks.extend(future.result())
-                except Exception as e:
-                    self.logger.error(f"Error generating tasks for symbol: {e}")
+        # Prepare date range for options once
+        full_range = pd.date_range(s_date_default, end_date_dt).normalize()
+        # Filter out weekends (Saturday=5, Sunday=6)
+        full_range = full_range[full_range.dayofweek < 5]
         
+        # Filter out market holidays
+        holidays = data_utils.get_market_holidays(s_date_default, end_date_dt)
+        # Convert holidays to tz-aware to match full_range if needed, or normalize both
+        # full_range is normalized (midnight). Holidays are usually midnight but naive.
+        # Let's ensure comparison works.
+        full_range = full_range[~full_range.isin(holidays)]
+        
+        full_range_strs = set(d.strftime("%Y-%m-%d") for d in full_range)
+
+        # Helper to check if update needed based on dates
+        def is_stale(ep_name, last_date):
+            if not last_date: return True
+            
+            if "INTRADAY" in ep_name:
+                 return (now_utc - last_date).total_seconds() > 3600 * 4
+            
+            if "DAILY" in ep_name:
+                # If last date is today or later, we are good
+                return last_date.date() < now_utc.date()
+            
+            if ep_name in avs.FUNDAMENTAL_ENDPOINTS:
+                # 80 days buffer
+                return (now_utc - last_date).days >= 80
+            
+            return True
+
+        for sym in tqdm(symbols, desc="Analyzing Symbols"):
+            for ep_name, base_params in sym_endpoints.items():
+                table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
+                
+                # Special Case: HISTORICAL_OPTIONS (Date Range)
+                if "date" in base_params:
+                     # We need to cover full_range_strs existing in DB
+                     existing_db_dates = db_state.get(table, {}).get(sym, set())
+                     needed_dates = full_range_strs - existing_db_dates
+                     
+                     for d_str in needed_dates:
+                         p = base_params.copy()
+                         p["symbol"] = sym
+                         p["date"] = d_str
+                         
+                         # Check if we have it locally
+                         fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
+                         fp_str = str(fp)
+                         
+                         if fp_str in local_cache_files:
+                             # Have file, missing in DB -> DB Task
+                             db_tasks.append((ep_name, p, fp))
+                         else:
+                             # Missing file -> API Task
+                             api_tasks.append((ep_name, p, fp))
+                     continue
+
+                # Standard Case
+                p = base_params.copy()
+                p["symbol"] = sym
+                
+                # Check DB State first
+                last_dt = db_state.get(table, {}).get(sym)
+                
+                if not is_stale(ep_name, last_dt):
+                    continue
+
+                # Data needed. Check Local.
+                fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
+                api_tasks.append((ep_name, p, fp))
+
         # Macro Tasks
         macro_endpoints = {k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS}
         for ep_name, params in macro_endpoints.items():
-             tasks.append((ep_name, params))
-
-        self.logger.info(f"Generated {len(tasks)} tasks.")
+             # Basic check
+             table = "MACRO"
+             last_dt = db_state.get(table, {}).get(ep_name)
+             if is_stale(ep_name, last_dt):
+                 fp = data_utils.generate_filepath(self.data_dir, ep_name, params)
+                 api_tasks.append((ep_name, params, fp))
         
-        def process_task(task_tuple):
-            ep, p = task_tuple
+        self.logger.info(f"Tasks Identified: {len(db_tasks)} DB Ingestions, {len(api_tasks)} API Fetches.")
+
+        # Phase 3: Execution
+        
+        # Part A: DB Ingestion (CPU/Disk Bound - mostly massive inserts)
+        if db_tasks:
+            self.logger.info(f"Processing {len(db_tasks)} missing DB records from local cache...")
+            with tqdm(total=len(db_tasks), desc="DB Ingestion") as pbar:
+                for ep, p, fp in db_tasks:
+                    try:
+                        df = pd.read_parquet(fp)
+                        if not df.empty:
+                            self._save_to_database(ep, df)
+                    except Exception as e:
+                        self.logger.error(f"Failed to load cached {fp}: {e}")
+                    pbar.update(1)
+
+        # Part B: API Fetching
+        if not api_tasks:
+            self.logger.info("All data up to date.")
+            return
+
+        self.logger.info(f"Starting {len(api_tasks)} API fetches (workers={max_workers})...")
+        
+        def process_api_task(task_tuple):
+            ep, p, fp = task_tuple
             try:
-                # 1. Check Parquet Cache
-                fp = data_utils.generate_filepath(self.data_dir, ep, p)
+                # 1. Double check cache (maybe redundant but safe)
                 if fp.exists():
                      try:
                          df_p = pd.read_parquet(fp)
+                         # Check max date
                          if not df_p.empty:
-                             self._save_to_database(ep, df_p)
-                             return
+                             pass
                      except Exception:
                          pass
 
@@ -916,7 +1000,7 @@ class AlphaVantageClient:
                 
                 # 3. Parse
                 df_res = self._parse_response(ep, raw, p)
-                if df_res.empty: return
+                if df_res.empty and not df_res.attrs.get("no_data_found"): return
                 
                 # 4. Save Parquet
                 try:
@@ -931,9 +1015,9 @@ class AlphaVantageClient:
             except Exception as e:
                 self.logger.error(f"Error processing {ep} {p}: {e}")
 
-        with tqdm(total=len(tasks), desc="Smart Update") as pbar:
+        with tqdm(total=len(api_tasks), desc="API Sync") as pbar:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(process_task, t) for t in tasks]
+                futures = [executor.submit(process_api_task, t) for t in api_tasks]
                 
                 for future in as_completed(futures):
                     pbar.update(1)
@@ -942,5 +1026,4 @@ class AlphaVantageClient:
                     except Exception:
                          pass
 
-        self.logger.info("Smart update completed.")
-
+        self.logger.info("Smart update completed successfully.")

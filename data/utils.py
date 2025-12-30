@@ -14,8 +14,20 @@ import numpy as np
 from decimal import Decimal, InvalidOperation
 
 import re
+from pandas.tseries.holiday import USFederalHolidayCalendar
+
 logger = logging.getLogger(__name__)
 
+
+def get_market_holidays(start_date: Union[str, datetime], end_date: Union[str, datetime]) -> pd.DatetimeIndex:
+    """
+    Get US Federal holidays between start and end date.
+    """
+    cal = USFederalHolidayCalendar()
+    # Add buffer to ensure we cover full range especially if start/end are close to holidays
+    # But usually creating rules for the range is fine.
+    holidays = cal.holidays(start=start_date, end=end_date)
+    return holidays
 
 def normalize_to_camel_case(text: str) -> str:
     """

@@ -83,13 +83,24 @@ def clean_macro(df: pd.DataFrame, endpoint_name: str) -> pd.DataFrame:
         df.rename(columns={candidates[0]: col_name}, inplace=True)
         
     if col_name in df.columns:
+        # Check if dt is in index or columns
+        if "dt" not in df.columns and (df.index.name == "dt" or "dt" in df.index.names):
+             df.reset_index(inplace=True)
+        elif "dt" not in df.columns and df.index.name is None:
+             # Just in case it's unnamed index
+             df.reset_index(inplace=True)
+             if "index" in df.columns:
+                 df.rename(columns={"index": "dt"}, inplace=True)
+                 
         # Keep only dt and the value column
         cols_to_keep = ["dt", col_name]
-        try:
-           df = df[cols_to_keep] 
-        except KeyError:
-            # Fallback if 'dt' is missing (though it shouldn't be by this point)
-            logger.warning(f"Could not filter MACRO columns properly for {endpoint_name}. Columns: {df.columns}")
+        
+        # Verify columns exist before filtering
+        existing_cols = [c for c in cols_to_keep if c in df.columns]
+        if len(existing_cols) == len(cols_to_keep):
+            df = df[cols_to_keep] 
+        else:
+            logger.warning(f"Missing expected columns for {endpoint_name}. Expected {cols_to_keep}, found {df.columns}")
             
     return df
 
