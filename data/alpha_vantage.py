@@ -894,15 +894,15 @@ class AlphaVantageClient:
             if not last_date: return True
             
             if "INTRADAY" in ep_name:
-                 return (now_utc - last_date).total_seconds() > 3600 * 4
+                 return (end_date_dt - last_date).total_seconds() > 3600 * 4
             
             if "DAILY" in ep_name:
                 # If last date is today or later, we are good
-                return last_date.date() < now_utc.date()
+                return last_date.date() < end_date_dt.date()
             
             if ep_name in avs.FUNDAMENTAL_ENDPOINTS:
                 # 80 days buffer
-                return (now_utc - last_date).days >= 80
+                return (end_date_dt - last_date).days >= 92
             
             return True
 
@@ -982,7 +982,7 @@ class AlphaVantageClient:
                     for fp in file_paths:
                         try:
                             df = pd.read_parquet(fp)
-                            if not df.empty:
+                            if not df.empty and len(df.dropna()) > 0:
                                 dfs_to_concat.append(df)
                         except Exception as e:
                             self.logger.error(f"Failed to load cached {fp}: {e}")
