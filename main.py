@@ -42,7 +42,7 @@ def main():
 
     # Update data efficiently
     client.smart_update(
-        symbols=['GOOG'],
+        # symbols=['GOOG'],
         endpoints=DEFAULT_ENDPOINTS,
         start_date='2010-12-20',
         end_date='2025-12-19'

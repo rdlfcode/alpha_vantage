@@ -906,46 +906,50 @@ class AlphaVantageClient:
             
             return True
 
-        for sym in tqdm(symbols, desc="Analyzing Symbols"):
-            for ep_name, base_params in sym_endpoints.items():
-                table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
-                
-                # Special Case: HISTORICAL_OPTIONS (Date Range)
-                if "date" in base_params:
-                     # We need to cover full_range_strs existing in DB
-                     existing_db_dates = db_state.get(table, {}).get(sym, set())
-                     needed_dates = full_range_strs - existing_db_dates
-                     
-                     for d_str in needed_dates:
-                         p = base_params.copy()
-                         p["symbol"] = sym
-                         p["date"] = d_str
-                         
-                         # Check if we have it locally
-                         fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
-                         fp_str = str(fp)
-                         
-                         if fp_str in local_cache_files:
-                             # Have file, missing in DB -> DB Task
-                             db_tasks.append((ep_name, p, fp))
-                         else:
-                             # Missing file -> API Task
-                             api_tasks.append((ep_name, p, fp))
-                     continue
+        with tqdm(total=len(symbols), unit="req", desc="Analyzing Symbols") as pbar:
+            for sym in symbols:
+                for ep_name, base_params in sym_endpoints.items():
+                    table = avs.ENDPOINT_TO_TABLE_MAP.get(ep_name, ep_name).upper()
+                    
+                    # Special Case: HISTORICAL_OPTIONS (Date Range)
+                    if "date" in base_params:
+                        # We need to cover full_range_strs existing in DB
+                        existing_db_dates = db_state.get(table, {}).get(sym, set())
+                        needed_dates = full_range_strs - existing_db_dates
+                        
+                        for d_str in needed_dates:
+                            p = base_params.copy()
+                            p["symbol"] = sym
+                            p["date"] = d_str
+                            
+                            # Check if we have it locally
+                            fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
+                            fp_str = str(fp)
+                            
+                            if fp_str in local_cache_files:
+                                # Have file, missing in DB -> DB Task
+                                db_tasks.append((ep_name, p, fp))
+                            else:
+                                # Missing file -> API Task
+                                api_tasks.append((ep_name, p, fp))
+                        continue
 
-                # Standard Case
-                p = base_params.copy()
-                p["symbol"] = sym
-                
-                # Check DB State first
-                last_dt = db_state.get(table, {}).get(sym)
-                
-                if not is_stale(ep_name, last_dt):
-                    continue
+                    # Standard Case
+                    p = base_params.copy()
+                    p["symbol"] = sym
+                    
+                    # Check DB State first
+                    last_dt = db_state.get(table, {}).get(sym)
+                    
+                    if not is_stale(ep_name, last_dt):
+                        continue
 
-                # Data needed. Check Local.
-                fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
-                api_tasks.append((ep_name, p, fp))
+                    # Data needed. Check Local.
+                    fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
+                    api_tasks.append((ep_name, p, fp))
+                    
+                pbar.update(1)
+                pbar.set_postfix_str(f"Last: {sym}", refresh=False)
 
         # Macro Tasks
         macro_endpoints = {k: v for k, v in endpoints.items() if k in avs.MACRO_ENDPOINTS}
@@ -964,15 +968,32 @@ class AlphaVantageClient:
         # Part A: DB Ingestion (CPU/Disk Bound - mostly massive inserts)
         if db_tasks:
             self.logger.info(f"Processing {len(db_tasks)} missing DB records from local cache...")
-            with tqdm(total=len(db_tasks), desc="DB Ingestion") as pbar:
-                for ep, p, fp in db_tasks:
-                    try:
-                        df = pd.read_parquet(fp)
-                        if not df.empty:
-                            self._save_to_database(ep, df)
-                    except Exception as e:
-                        self.logger.error(f"Failed to load cached {fp}: {e}")
-                    pbar.update(1)
+            
+            # Group tasks by endpoint
+            tasks_by_endpoint = {}
+            for ep, p, fp in db_tasks:
+                if ep not in tasks_by_endpoint:
+                    tasks_by_endpoint[ep] = []
+                tasks_by_endpoint[ep].append(fp)
+
+            with tqdm(total=len(db_tasks), unit="rows", desc="DB Ingestion") as pbar:
+                for ep, file_paths in tasks_by_endpoint.items():
+                    dfs_to_concat = []
+                    for fp in file_paths:
+                        try:
+                            df = pd.read_parquet(fp)
+                            if not df.empty:
+                                dfs_to_concat.append(df)
+                        except Exception as e:
+                            self.logger.error(f"Failed to load cached {fp}: {e}")
+                        pbar.update(1)
+                    
+                    if dfs_to_concat:
+                        try:
+                            combined_df = pd.concat(dfs_to_concat)
+                            self._save_to_database(ep, combined_df)
+                        except Exception as e:
+                            self.logger.error(f"Failed to save batch for {ep}: {e}")
 
         # Part B: API Fetching
         if not api_tasks:
@@ -981,49 +1002,9 @@ class AlphaVantageClient:
 
         self.logger.info(f"Starting {len(api_tasks)} API fetches (workers={max_workers})...")
         
-        def process_api_task(task_tuple):
-            ep, p, fp = task_tuple
-            try:
-                # 1. Double check cache (maybe redundant but safe)
-                if fp.exists():
-                     try:
-                         df_p = pd.read_parquet(fp)
-                         # Check max date
-                         if not df_p.empty:
-                             pass
-                     except Exception:
-                         pass
-
-                # 2. Fetch
-                raw = self._fetch_data(ep, p)
-                if not raw: return
-                
-                # 3. Parse
-                df_res = self._parse_response(ep, raw, p)
-                if df_res.empty and not df_res.attrs.get("no_data_found"): return
-                
-                # 4. Save Parquet
-                try:
-                    fp.parent.mkdir(parents=True, exist_ok=True)
-                    df_res.to_parquet(fp)
-                except Exception as e:
-                    self.logger.error(f"Parquet save failed: {e}")
-
-                # 5. Save DB
-                self._save_to_database(ep, df_res)
-                    
-            except Exception as e:
-                self.logger.error(f"Error processing {ep} {p}: {e}")
-
-        with tqdm(total=len(api_tasks), desc="API Sync") as pbar:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [executor.submit(process_api_task, t) for t in api_tasks]
-                
-                for future in as_completed(futures):
-                    pbar.update(1)
-                    try:
-                        future.result()
-                    except Exception:
-                         pass
+        # Execute tasks sequentially using _execute_tasks
+        # Filter api_tasks to (endpoint, params) tuples expected by _execute_tasks
+        seq_tasks = [(t[0], t[1]) for t in api_tasks]
+        self._execute_tasks(seq_tasks, force_refresh=True)
 
         self.logger.info("Smart update completed successfully.")
