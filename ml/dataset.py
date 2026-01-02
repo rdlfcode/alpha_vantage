@@ -5,7 +5,8 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 from typing import List, Tuple, Dict, Any, Optional
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, LabelEncoder
+from ml.settings import ml_settings
 
 class AlgoEvalsDataset(Dataset):
     """
@@ -16,28 +17,36 @@ class AlgoEvalsDataset(Dataset):
         self, 
         data: pd.DataFrame, 
         target_col: str, 
-        sequence_length: int = 60,
-        prediction_horizon: int = 1,
-        group_col: str = "symbol",
-        time_col: str = "dt", 
+        sequence_length: int = None,
+        prediction_horizon: int = None,
+        prediction_mode: str = None,
+        group_col: str = None,
+        time_col: str = None, 
         categorical_cols: Optional[List[str]] = None,
         numerical_cols: Optional[List[str]] = None,
         scalers: Optional[Dict[str, Any]] = None,
         encoders: Optional[Dict[str, Any]] = None,
+        scaler_type: str = "standard",
+        scaler_overrides: Optional[Dict[str, str]] = None,
         is_inference: bool = False
     ):
-        self.sequence_length = sequence_length
-        self.prediction_horizon = prediction_horizon
-        self.target_col = target_col
-        self.group_col = group_col
-        self.time_col = time_col
+        self.target_col = target_col or ml_settings["data"]["target_col"]
+        self.sequence_length = sequence_length or ml_settings["data"]["sequence_length"]
+        self.prediction_horizon = prediction_horizon or ml_settings["data"]["prediction_horizon_training"]
+        self.prediction_mode = prediction_mode or ml_settings["data"]["prediction_mode"]
+        self.group_col = group_col or ml_settings["data"]["group_col"]
+        self.time_col = time_col or ml_settings["data"]["time_col"]
+        self.scaler_type = scaler_type
+        self.scaler_overrides = scaler_overrides or {}
         self.is_inference = is_inference
 
         # Sort by group and time
-        if time_col in data.columns:
-            self.data = data.sort_values(by=[group_col, time_col]).reset_index(drop=True)
+        if self.time_col and self.time_col in data.columns:
+            self.data = data.sort_values(by=[self.group_col, self.time_col]).reset_index(drop=True)
+        elif self.group_col and self.group_col in data.columns:
+            self.data = data.sort_values(by=[self.group_col]).reset_index(drop=True)
         else:
-            self.data = data.sort_values(by=[group_col]).reset_index(drop=True)
+            self.data = data.reset_index(drop=True)
 
         # Dynamic Column Detection
         if categorical_cols is None or numerical_cols is None:
@@ -79,6 +88,22 @@ class AlgoEvalsDataset(Dataset):
                 
         return cat_cols, num_cols
 
+    def _create_scaler(self, col: str):
+        """Create a scaler based on configuration."""
+        # Check for column-specific override
+        scaler_type = self.scaler_overrides.get(col, self.scaler_type)
+        
+        if scaler_type == "standard":
+            return StandardScaler()
+        elif scaler_type == "minmax":
+            return MinMaxScaler()
+        elif scaler_type == "robust":
+            return RobustScaler()
+        elif scaler_type == "none":
+            return None
+        else:
+            raise ValueError(f"Unknown scaler type: {scaler_type}")
+    
     def _preprocess(self, df: pd.DataFrame) -> pd.DataFrame:
         
         # Numerical
@@ -89,17 +114,25 @@ class AlgoEvalsDataset(Dataset):
                 if self.is_inference:
                      # Warn or handle missing scaler? for now assume we must have it
                      raise ValueError(f"Scaler for {col} not found during inference")
-                scaler = StandardScaler()
+                scaler = self._create_scaler(col)
                 # Fit only on valid data
                 valid_data = df[col].dropna().values.reshape(-1, 1)
-                if len(valid_data) > 0:
+                if scaler is not None and len(valid_data) > 0:
                     scaler.fit(valid_data)
+                elif scaler is None:
+                    pass  # No scaling
+                else:
+                    print(f"WARNING: Scaler for {col} not fitted! valid_data len is 0. DF len: {len(df)}")
+                    print(f"Head of failing col: {df[col].head()}")
                 self.scalers[col] = scaler
             
             # Transform
             # Fill NA before scaling? Strategy: ffill then fillna(0)
-            df[col] = df[col].ffill().fillna(0) 
-            df[col] = self.scalers[col].transform(df[col].values.reshape(-1, 1))
+            df[col] = df[col].ffill().fillna(0)
+            
+            # Apply scaling if scaler exists
+            if self.scalers[col] is not None:
+                df[col] = self.scalers[col].transform(df[col].values.reshape(-1, 1))
 
         # Categorical
         for col in self.cat_cols:
@@ -148,25 +181,30 @@ class AlgoEvalsDataset(Dataset):
             targets = group[self.target_col].values
             
             # Need (seq_len + prediction_horizon) length at least
-            # Actually, for training: Input [t-seq : t], Target [t+horizon]
-            
             total_len = len(group)
             if total_len <= self.sequence_length + self.prediction_horizon:
                 continue
-                
-            for i in range(total_len - self.sequence_length - self.prediction_horizon + 1):
+            
+            # Determine how many sequences we can create
+            if self.prediction_mode == 'seq2seq':
+                # For seq2seq: input [t-seq:t], target [t+1:t+1+horizon]
+                max_i = total_len - self.sequence_length - self.prediction_horizon
+            else:
+                # For seq2point: input [t-seq:t], target [t+horizon]
+                max_i = total_len - self.sequence_length - self.prediction_horizon + 1
+            
+            for i in range(max_i):
                 # Inputs
                 x_num = values[i : i + self.sequence_length]
                 x_cat = cats[i : i + self.sequence_length] if cats is not None else []
                 
                 # Target
-                # Predict the value at i + seq_length + horizon - 1?
-                # or the sequence of future values?
-                # User asked for "Prediction (n points into the future)"
-                # Let's predict the single point at horizon for simplicity first, or the sequence.
-                # Usually seq-to-seq or seq-to-point. 
-                # Let's do seq-to-point for now.
-                y = targets[i + self.sequence_length + self.prediction_horizon - 1]
+                if self.prediction_mode == 'seq2seq':
+                    # Predict a sequence of future values
+                    y = targets[i + self.sequence_length : i + self.sequence_length + self.prediction_horizon]
+                else:
+                    # Predict a single point in the future (seq2point)
+                    y = targets[i + self.sequence_length + self.prediction_horizon - 1]
                 
                 sequences.append({
                     'x_num': torch.tensor(x_num, dtype=torch.float32),

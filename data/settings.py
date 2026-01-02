@@ -7,6 +7,7 @@ settings = {
    "AlphaVantageRPM": 75,
    "AlphaVantageRPD": 1000000,
    "workers": 64,
+   "option_expiration_days": [30, 91, 182, 365],
    "exchange_timezones": {
         "US/Eastern": ["NYSE", "NASDAQ", "NASDAQ NMSC", "AMEX", "BATS"],
         "Europe/London": ["LSE"],

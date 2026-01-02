@@ -49,23 +49,16 @@ class ExponentialRegressionModel(StatisticalModel):
 
         return torch.exp(self.linear(x_flat))
 
-class FFTModel(StatisticalModel):
+class FFTModel1D(StatisticalModel):
     """
-    FFT Model capable of operating on target only (1D) or all features (2D).
+    FFT Model capable of operating on target only (1D).
     """
-    def __init__(self, seq_len, input_dim=1, pred_len=1, use_all_features=False):
+    def __init__(self, seq_len, input_dim=1, pred_len=1):
         super().__init__(pred_len)
         self.seq_len = seq_len
-        self.use_all_features = use_all_features
         
-        if use_all_features:
-            # 2D FFT on (seq, dim)
-            # rfft2 output last dimension is dim // 2 + 1
-            # We flatten the result: seq_len * (dim // 2 + 1)
-            fft_dim = seq_len * (input_dim // 2 + 1)
-        else:
-            # 1D FFT on first feature
-            fft_dim = seq_len // 2 + 1
+        # 1D FFT on first feature
+        fft_dim = seq_len // 2 + 1
             
         self.linear = nn.Linear(fft_dim, pred_len)
 
@@ -73,19 +66,33 @@ class FFTModel(StatisticalModel):
         # x: (batch, seq_len, dim)
         batch, seq, dim = x.shape
         
-        if not self.use_all_features:
-            # 1D FFT on the first feature
-            x_signal = x[..., 0] 
-            # rfft returns complex tensor of size floor(n/2) + 1
-            fft_coeffs = torch.fft.rfft(x_signal, dim=-1)
-            mags = torch.abs(fft_coeffs) # (batch, freq_bins)
-        else:
-            # 2D FFT on (seq, dim)
-            # Computes 2D FFT over the last two dimensions
-            fft_coeffs = torch.fft.rfft2(x)
-            mags = torch.abs(fft_coeffs)
-            mags = mags.view(batch, -1) # Flatten features
-            
+        # 1D FFT on the first feature
+        x_signal = x[..., 0] 
+        # rfft returns complex tensor of size floor(n/2) + 1
+        fft_coeffs = torch.fft.rfft(x_signal, dim=-1)
+        mags = torch.abs(fft_coeffs) # (batch, freq_bins)
+        return self.linear(mags)
+
+class FFTModel2D(StatisticalModel):
+    """
+    FFT Model capable of operating on all features (2D).
+    """
+    def __init__(self, seq_len, input_dim=1, pred_len=1):
+        super().__init__(pred_len)
+        self.seq_len = seq_len
+        
+        fft_dim = seq_len * (input_dim // 2 + 1)
+        self.linear = nn.Linear(fft_dim, pred_len)
+
+    def forward(self, x):
+        # x: (batch, seq_len, dim)
+        batch, seq, dim = x.shape
+    
+        # 2D FFT on (seq, dim)
+        # Computes 2D FFT over the last two dimensions
+        fft_coeffs = torch.fft.rfft2(x)
+        mags = torch.abs(fft_coeffs)
+        mags = mags.view(batch, -1) # Flatten features
         return self.linear(mags)
 
 # --- Transformer Models ---
@@ -105,7 +112,7 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(1)].transpose(0, 1).view(1, x.size(1), -1)
         return self.dropout(x)
 
-class VanillaTransformer(nn.Module):
+class Transformer(nn.Module):
     def __init__(self, input_dim, d_model=128, nhead=4, num_layers=2, output_dim=1, dropout=0.1):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, d_model)
@@ -205,12 +212,12 @@ class TransformerMemory(MemoryModule):
         return out, state
 
 class TITANS(nn.Module):
-    def __init__(self, input_dim, d_model=128, nhead=4, num_layers=2, output_dim=1, memory_type='neural', memory_size=128):
+    def __init__(self, input_dim, d_model=128, nhead=4, num_layers=2, output_dim=1, memory_type='neural', memory_size=128, dropout=0.1):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, d_model)
         
         # Short-term Memory (Core Transformer)
-        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead, batch_first=True)
+        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead, dropout=dropout, batch_first=True)
         self.core_transformer = nn.TransformerEncoder(encoder_layers, num_layers)
         
         # Long-term Memory Choice
@@ -257,37 +264,37 @@ def create_model(settings):
     input_dim = settings["model"]["input_dim"]
     output_dim = settings["model"]["output_dim"]
     
-    if model_type == "Linear":
-        return LinearRegressionModel(input_dim, output_dim)
-    
-    elif model_type == "Exponential":
-        return ExponentialRegressionModel(input_dim, output_dim)
-        
-    elif model_type == "FFT":
-        seq_len = settings["data"]["sequence_length"]
-        # FFT specific configs could be added to settings if needed
-        return FFTModel(seq_len=seq_len, input_dim=input_dim, pred_len=output_dim, use_all_features=True)
-        
-    elif model_type == "Transformer":
-        return VanillaTransformer(
-            input_dim=input_dim,
-            d_model=settings["model"]["d_model"],
-            nhead=settings["model"]["nhead"],
-            num_layers=settings["model"]["num_layers"],
-            output_dim=output_dim,
-            dropout=settings["model"]["dropout"]
-        )
-        
-    elif model_type == "TITANS":
-        return TITANS(
-            input_dim=input_dim,
-            d_model=settings["model"]["d_model"],
-            nhead=settings["model"]["nhead"],
-            num_layers=settings["model"]["num_layers"],
-            output_dim=output_dim,
-            memory_type=settings["model"]["memory_type"],
-            memory_size=settings["model"]["memory_size"]
-        )
-        
-    else:
-        raise ValueError(f"Unknown model type: {model_type}")
+    # Get model-specific params, defaulting to empty dict if not found
+    params = settings["model"].get("params", {}).get(model_type, {})
+
+    match model_type:
+        case "Linear":
+            return LinearRegressionModel(input_dim, output_dim)
+            
+        case "Exponential":
+            return ExponentialRegressionModel(input_dim, output_dim)
+            
+        case "FFT1D":
+            seq_len = settings["data"]["sequence_length"]
+            return FFTModel1D(seq_len=seq_len, input_dim=input_dim, pred_len=output_dim)
+
+        case "FFT2D":
+            seq_len = settings["data"]["sequence_length"]
+            return FFTModel2D(seq_len=seq_len, input_dim=input_dim, pred_len=output_dim)
+            
+        case "Transformer":
+            return Transformer(
+                input_dim=input_dim,
+                output_dim=output_dim,
+                **params
+            )
+            
+        case "TITANS":
+            return TITANS(
+                input_dim=input_dim,
+                output_dim=output_dim,
+                **params
+            )
+            
+        case _:
+            raise ValueError(f"Unknown model type: {model_type}")

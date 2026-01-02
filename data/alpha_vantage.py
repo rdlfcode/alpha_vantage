@@ -901,7 +901,7 @@ class AlphaVantageClient:
                 return last_date.date() < end_date_dt.date()
             
             if ep_name in avs.FUNDAMENTAL_ENDPOINTS:
-                # 80 days buffer
+                # 92-day buffer
                 return (end_date_dt - last_date).days >= 92
             
             return True
@@ -928,15 +928,11 @@ class AlphaVantageClient:
                             
                             if fp_str in local_cache_files:
                                 # Have file, missing in DB -> DB Task
-                                db_tasks.append((ep_name, p, fp))
+                                db_tasks.append((ep_name, p, fp_str))
                             else:
                                 # Missing file -> API Task
-                                api_tasks.append((ep_name, p, fp))
+                                api_tasks.append((ep_name, p, fp_str))
                         continue
-
-                    # Standard Case
-                    p = base_params.copy()
-                    p["symbol"] = sym
                     
                     # Check DB State first
                     last_dt = db_state.get(table, {}).get(sym)
@@ -944,9 +940,20 @@ class AlphaVantageClient:
                     if not is_stale(ep_name, last_dt):
                         continue
 
-                    # Data needed. Check Local.
+                    # Standard Case
+                    p = base_params.copy()
+                    p["symbol"] = sym
+                    
+                    # Check if we have it locally
                     fp = data_utils.generate_filepath(self.data_dir, ep_name, p)
-                    api_tasks.append((ep_name, p, fp))
+                    fp_str = str(fp)
+                    
+                    if fp_str in local_cache_files:
+                        # Have file, missing in DB -> DB Task
+                        db_tasks.append((ep_name, p, fp_str))
+                    else:
+                        # Missing file -> API Task
+                        api_tasks.append((ep_name, p, fp_str))
                     
                 pbar.update(1)
                 pbar.set_postfix_str(f"Last: {sym}", refresh=False)
@@ -959,7 +966,7 @@ class AlphaVantageClient:
              last_dt = db_state.get(table, {}).get(ep_name)
              if is_stale(ep_name, last_dt):
                  fp = data_utils.generate_filepath(self.data_dir, ep_name, params)
-                 api_tasks.append((ep_name, params, fp))
+                 api_tasks.append((ep_name, params, str(fp)))
         
         self.logger.info(f"Tasks Identified: {len(db_tasks)} DB Ingestions, {len(api_tasks)} API Fetches.")
 

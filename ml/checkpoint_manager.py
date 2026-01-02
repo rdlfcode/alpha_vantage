@@ -203,12 +203,22 @@ class CheckpointManager:
                 "dt": metadata["dt"],
                 "model_name": metadata["model_name"],
                 "model_type": metadata["model_type"],
-                "training_run_id": metadata["training_run_id"], # PK
-                "metrics": json.dumps(metadata["metrics"]),
+                "training_run_id": metadata["training_run_id"],
                 "best_val_loss": metadata["best_val_loss"],
                 "dataset_size": metadata["dataset_size"],
                 "checkpoint_path": metadata["checkpoint_path"],
             }
+            
+            # Unpack metrics
+            metrics = metadata["metrics"]
+            if isinstance(metrics, str):
+                metrics = json.loads(metrics)
+                
+            for m in ["MAE", "MSE", "RMSE", "MAPE", "R2", "Adj_R2", "RMSLE", "Loss"]:
+                if m in metrics:
+                    row[m] = metrics[m]
+                else:
+                    row[m] = None
             
             df = pd.DataFrame([row])
             

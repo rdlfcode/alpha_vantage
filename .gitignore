@@ -14,6 +14,7 @@ __pycache__/
 data/files
 *.db
 *.db.wal
+ml/checkpoints
 
 # Keys
 .env

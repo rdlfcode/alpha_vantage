@@ -6,7 +6,8 @@ It serves as the single source of truth for API endpoints and their parameters.
 """
 
 DEFAULT_ENDPOINTS = {
-   "TIME_SERIES_DAILY_ADJUSTED": {"symbol": None, "outputsize": "full", "datatype": "csv"},
+   "TIME_SERIES_DAILY": {"symbol": None, "outputsize": "full", "datatype": "csv"},
+   # "TIME_SERIES_DAILY_ADJUSTED": {"symbol": None, "outputsize": "full", "datatype": "csv"},
    "INSIDER_TRANSACTIONS": {"symbol": None},
    "INCOME_STATEMENT": {"symbol": None},
    "BALANCE_SHEET": {"symbol": None},
@@ -377,11 +378,28 @@ CREATE TABLE MODEL_METADATA (
     model_name TEXT,
     model_type TEXT,
     training_run_id TEXT,
-    metrics JSON,
     best_val_loss DECIMAL(20, 6),
+    MAE DECIMAL(20, 6),
+    MSE DECIMAL(20, 6),
+    RMSE DECIMAL(20, 6),
+    MAPE DECIMAL(20, 6),
+    R2 DECIMAL(20, 6),
+    Adj_R2 DECIMAL(20, 6),
+    RMSLE DECIMAL(20, 6),
+    Loss DECIMAL(20, 6),
     dataset_size INT,
     checkpoint_path TEXT,
     PRIMARY KEY (training_run_id)
+);""",
+    "PREDICTIONS": """
+CREATE TABLE PREDICTIONS (
+    symbol TEXT,
+    dt TIMESTAMP,
+    predicted_value DECIMAL(20, 4),
+    model_name TEXT,
+    run_id TEXT,
+    created_at TIMESTAMP,
+    PRIMARY KEY (symbol, dt, model_name, run_id)
 );"""
 }
 
@@ -395,7 +413,8 @@ TABLE_PKS = {
    "MACRO": ["dt"],
    "HISTORICAL_OPTIONS": ["symbol", "expiration", "strike", "type", "dt"],
    "OVERVIEW": ["symbol", "dt"],
-   "MODEL_METADATA": ["training_run_id"]
+   "MODEL_METADATA": ["training_run_id"],
+   "PREDICTIONS": ["symbol", "dt", "model_name", "run_id"]
 }
 
 BASE_URL = "https://www.alphavantage.co/query"
